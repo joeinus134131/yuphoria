@@ -5,10 +5,15 @@
       <div class="logo-group">
         <span class="logo-dot" aria-hidden="true"></span>
         <h1>yuphoria</h1>
-        <span class="badge">v2.0 (Vue)</span>
       </div>
       <p class="tagline">Tempat memori indah dicetak dalam satu strip visual.</p>
       <div class="header-actions">
+        <a href="/" class="back-link" title="Kembali ke beranda">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Beranda
+        </a>
         <button id="theme-toggle" class="icon-btn" aria-label="Ganti mode warna" title="Ganti mode warna" @click="toggleTheme">
           <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
             <circle cx="12" cy="12" r="4"></circle>
@@ -52,7 +57,7 @@
         <nav aria-label="Tautan navigasi sekunder">
           <ul class="footer-links">
             <li><a href="#camera-status-indicator" class="footer-link">Status Studio</a></li>
-            <li><a href="https://github.com" target="_blank" rel="noopener noreferrer" class="footer-link">Dokumentasi</a></li>
+            <li><a href="/#cara-kerja" class="footer-link">Cara Kerja</a></li>
             <li><a href="#customizer-form" class="footer-link">Atur Filter</a></li>
           </ul>
         </nav>
@@ -159,6 +164,26 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 12px;
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-display);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-decoration: none;
+  padding: 6px 12px;
+  border-radius: 99px;
+  border: 1px solid var(--border-color);
+  transition: color var(--transition-fast), border-color var(--transition-fast), background var(--transition-fast);
+}
+.back-link:hover {
+  color: var(--text-primary);
+  border-color: rgba(255,255,255,0.18);
+  background: var(--bg-tertiary);
 }
 
 .sun-icon {
