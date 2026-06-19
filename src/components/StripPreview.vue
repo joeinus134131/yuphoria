@@ -96,18 +96,37 @@
 
     <!-- Compilation / Export trigger -->
     <div class="action-footer">
-      <button class="secondary-btn full-btn" @click="toggleFlip">
-        {{ isFlipped ? 'Lihat Foto Strip' : 'Lihat Pesan Rahasia 🔄' }}
-      </button>
-      
-      <button id="download-btn" class="primary-btn full-btn margin-top-sm" :disabled="!canDownload" @click="compileAndDownloadStrip">
-        <svg v-if="!isCompilingVideo" class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"></path>
-        </svg>
-        <span v-else class="spinner-btn" aria-hidden="true"></span>
-        {{ isCompilingVideo ? 'Memproses Motion Photo…' : 'Cetak & Unduh Foto Strip' }}
-      </button>
-      <p class="export-helper" id="download-btn-helper">{{ downloadHelperText }}</p>
+
+      <!-- Status bar — shows progress or ready state -->
+      <div class="strip-status" :class="{ 'is-ready': canDownload }">
+        <span class="status-dot" aria-hidden="true"></span>
+        <span class="status-text">{{ downloadHelperText }}</span>
+      </div>
+
+      <!-- Action row -->
+      <div class="action-row">
+        <button class="btn-sm btn-secondary-sm" @click="toggleFlip" :title="isFlipped ? 'Lihat foto strip' : 'Lihat pesan rahasia'">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38"/>
+          </svg>
+          {{ isFlipped ? 'Foto' : 'Pesan 💌' }}
+        </button>
+
+        <button
+          id="download-btn"
+          class="btn-sm btn-primary-sm"
+          :disabled="!canDownload"
+          @click="compileAndDownloadStrip"
+          :aria-label="isCompilingVideo ? 'Memproses strip…' : 'Cetak & unduh foto strip'"
+        >
+          <span v-if="isCompilingVideo" class="spinner-sm" aria-hidden="true"></span>
+          <svg v-else width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 15V3m0 12l-4-4m4 4l4-4"/><path d="M3 17v2a2 2 0 002 2h14a2 2 0 002-2v-2"/>
+          </svg>
+          {{ isCompilingVideo ? 'Memproses…' : 'Unduh Strip' }}
+        </button>
+      </div>
+
     </div>
 
     <!-- Hidden Offscreen Canvas for exporting high resolution strip compilation -->
@@ -965,21 +984,6 @@ const triggerPrinterAnimation = () => {
   justify-content: space-between;
 }
 
-.spinner-btn {
-  display: inline-block;
-  width: 16px;
-  height: 16px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-radius: 50%;
-  border-top-color: #fff;
-  animation: btn-spin 0.8s linear infinite;
-  margin-right: 8px;
-}
-
-@keyframes btn-spin {
-  to { transform: rotate(360deg); }
-}
-
 .panel-title {
   font-family: var(--font-display);
   font-weight: 700;
@@ -1488,19 +1492,130 @@ const triggerPrinterAnimation = () => {
   width: 100%;
   display: flex;
   flex-direction: column;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+/* ── Status bar ── */
+.strip-status {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 12px;
+  border-radius: 8px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  transition: border-color var(--transition-fast), background var(--transition-fast);
+}
+.strip-status.is-ready {
+  border-color: rgba(139, 92, 246, 0.3);
+  background: rgba(139, 92, 246, 0.06);
+}
+.status-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--text-secondary);
+  opacity: 0.5;
+  transition: background var(--transition-fast), opacity var(--transition-fast);
+}
+.strip-status.is-ready .status-dot {
+  background: var(--accent-purple);
+  opacity: 1;
+  box-shadow: 0 0 6px rgba(139, 92, 246, 0.5);
+}
+.status-text {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  line-height: 1.3;
+}
+.strip-status.is-ready .status-text {
+  color: var(--accent-purple);
+}
+
+/* ── Action row ── */
+.action-row {
+  display: flex;
   gap: 8px;
-  margin-top: 20px;
+  align-items: stretch;
 }
 
-.full-btn {
-  width: 100%;
+/* ── Shared compact button ── */
+.btn-sm {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 9px 14px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  transition:
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast),
+    background var(--transition-fast),
+    opacity var(--transition-fast);
+  white-space: nowrap;
+  line-height: 1;
+}
+.btn-sm:active { transform: scale(0.97); }
+
+/* Flip / secondary */
+.btn-secondary-sm {
+  flex: 0 0 auto;
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+}
+.btn-secondary-sm:hover {
+  background: var(--border-color);
+  color: var(--text-primary);
+  transform: translateY(-1px);
 }
 
+/* Download / primary */
+.btn-primary-sm {
+  flex: 1;
+  background: linear-gradient(135deg, var(--accent-purple), var(--accent-magenta));
+  color: #fff;
+  box-shadow: 0 4px 14px var(--accent-glow);
+}
+.btn-primary-sm:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px var(--accent-glow);
+  filter: brightness(1.06);
+}
+.btn-primary-sm:disabled {
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+  box-shadow: none;
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* Spinner for loading state */
+.spinner-sm {
+  width: 13px; height: 13px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.full-btn { width: 100%; }
 .export-helper {
   font-size: 0.75rem;
   color: var(--text-secondary);
   text-align: center;
 }
-
 .margin-top-sm { margin-top: 8px; }
 </style>

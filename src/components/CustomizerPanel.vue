@@ -1,5 +1,5 @@
 <template>
-  <div class="glass-card panel-card">
+  <div class="glass-card panel-card" id="customizer-form">
     <div class="tabs-header">
       <button 
         v-for="tab in tabItems" 
