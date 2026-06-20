@@ -774,13 +774,531 @@ a:focus-visible, button:focus-visible {
   border-radius: 4px;
 }
 
-/* Respect reduced motion */
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
+
+/* ─────────────────────────────────────────────
+   AUTH MODAL & DASHBOARD DRAWER STYLES
+──────────────────────────────────────────────── */
+.nav-auth-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.nav-user-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--surface);
+  border: 1px solid rgba(42,40,37,0.08);
+  border-radius: var(--r-pill);
+  padding: 6px 14px 6px 6px;
+  cursor: pointer;
+  transition: transform 0.2s var(--ease-bounce), background 0.2s ease;
+}
+.nav-user-badge:hover {
+  transform: translateY(-1px);
+  background: var(--surface-2);
+}
+.nav-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--lavender));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  color: var(--ink);
+  font-weight: 700;
+  border: 1px solid rgba(42, 40, 37, 0.1);
+}
+.nav-user-name {
+  font-family: var(--font-d);
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--ink);
+  max-width: 90px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(42, 40, 37, 0.4);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+.modal-overlay.active {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.auth-card {
+  background: var(--off-white);
+  border: 1.5px solid rgba(42,40,37,0.09);
+  border-radius: var(--r-lg);
+  width: 90%;
+  max-width: 400px;
+  padding: 32px 28px;
+  box-shadow: var(--shadow-lg);
+  transform: translateY(20px);
+  transition: transform 0.3s var(--ease-bounce);
+  position: relative;
+}
+.modal-overlay.active .auth-card {
+  transform: translateY(0);
+}
+.auth-close {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: transparent;
+  border: none;
+  font-size: 1.5rem;
+  color: var(--ink-muted);
+  cursor: pointer;
+  line-height: 1;
+}
+.auth-close:hover { color: var(--ink); }
+
+.auth-tabs {
+  display: flex;
+  border-bottom: 2px solid var(--surface);
+  margin-bottom: 24px;
+}
+.auth-tab {
+  flex: 1;
+  background: transparent;
+  border: none;
+  font-family: var(--font-d);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--ink-muted);
+  padding-bottom: 12px;
+  cursor: pointer;
+  text-align: center;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: all 0.2s ease;
+}
+.auth-tab.active {
+  color: var(--ink);
+  border-bottom-color: var(--ink);
+}
+
+.auth-form {
+  display: none;
+  flex-direction: column;
+  gap: 16px;
+}
+.auth-form.active {
+  display: flex;
+}
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.form-field label {
+  font-family: var(--font-d);
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+.form-field input {
+  font-family: var(--font-b);
+  background: var(--surface);
+  border: 1px solid rgba(42,40,37,0.08);
+  border-radius: var(--r-sm);
+  padding: 10px 14px;
+  color: var(--ink);
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+.form-field input:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: var(--off-white);
+  box-shadow: 0 0 0 3px rgba(184, 165, 200, 0.25);
+}
+.btn-auth-submit {
+  font-family: var(--font-d);
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--off-white);
+  background: var(--ink);
+  border: none;
+  border-radius: var(--r-pill);
+  padding: 12px;
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: background 0.2s ease, transform 0.2s ease;
+  cursor: pointer;
+}
+.btn-auth-submit:hover {
+  background: #3d3a36;
+}
+.btn-auth-submit:active {
+  transform: scale(0.98);
+}
+
+.drawer-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(42, 40, 37, 0.3);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 999;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+.drawer-overlay.active {
+  opacity: 1;
+  pointer-events: all;
+}
+.dashboard-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  max-width: 440px;
+  background: var(--off-white);
+  border-left: 1px solid rgba(42,40,37,0.08);
+  z-index: 1000;
+  box-shadow: var(--shadow-lg);
+  transform: translateX(100%);
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+}
+.drawer-overlay.active .dashboard-drawer {
+  transform: translateX(0);
+}
+.drawer-header {
+  padding: 24px;
+  border-bottom: 1px solid rgba(42,40,37,0.06);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.drawer-title-group h3 {
+  font-family: var(--font-d);
+  font-weight: 800;
+  font-size: 1.25rem;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+.drawer-title-group p {
+  font-size: 0.75rem;
+  color: var(--ink-muted);
+}
+.drawer-close {
+  background: transparent;
+  border: none;
+  font-size: 1.5rem;
+  color: var(--ink-muted);
+  cursor: pointer;
+}
+.drawer-close:hover { color: var(--ink); }
+
+.drawer-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.drawer-profile-card {
+  background: var(--surface);
+  border-radius: var(--r-md);
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid rgba(42,40,37,0.04);
+}
+.profile-avatar-lg {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--lavender));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+}
+.profile-info {
+  flex: 1;
+}
+.profile-info h4 {
+  font-family: var(--font-d);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+.profile-info p {
+  font-size: 0.75rem;
+  color: var(--ink-muted);
+  word-break: break-all;
+}
+.profile-badge {
+  background: rgba(184, 165, 200, 0.18);
+  border: 1px solid rgba(184, 165, 200, 0.3);
+  color: #8c71a3;
+  font-size: 0.65rem;
+  font-family: var(--font-d);
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 99px;
+  display: inline-block;
+  margin-top: 4px;
+}
+
+.personalization-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background: var(--surface);
+  border-radius: var(--r-md);
+  padding: 20px 16px;
+  border: 1px solid rgba(42,40,37,0.04);
+}
+.personalization-form h4 {
+  font-family: var(--font-d);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+.btn-save-personalization {
+  font-family: var(--font-d);
+  font-weight: 700;
+  font-size: 0.8rem;
+  color: var(--off-white);
+  background: var(--ink);
+  border: none;
+  border-radius: var(--r-pill);
+  padding: 10px 20px;
+  cursor: pointer;
+  align-self: flex-start;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+.btn-save-personalization:hover {
+  background: #3d3a36;
+}
+.btn-save-personalization:active {
+  transform: scale(0.97);
+}
+
+.gallery-section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.gallery-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.gallery-header h4 {
+  font-family: var(--font-d);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+.gallery-count {
+  font-size: 0.75rem;
+  color: var(--ink-muted);
+  background: var(--surface-2);
+  padding: 2px 8px;
+  border-radius: 99px;
+  font-weight: 700;
+}
+
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+.gallery-item {
+  background: var(--surface);
+  border: 1px solid rgba(42,40,37,0.06);
+  border-radius: var(--r-md);
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: relative;
+  overflow: hidden;
+}
+.gallery-thumb-wrap {
+  width: 100%;
+  aspect-ratio: 0.75;
+  border-radius: var(--r-sm);
+  overflow: hidden;
+  background: #0c0a14;
+  position: relative;
+}
+.gallery-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+.gallery-item:hover .gallery-thumb {
+  transform: scale(1.04);
+}
+.gallery-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.gallery-label {
+  font-family: var(--font-d);
+  font-weight: 700;
+  font-size: 0.72rem;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.gallery-date {
+  font-size: 0.6rem;
+  color: var(--ink-muted);
+}
+.gallery-actions {
+  display: flex;
+  gap: 6px;
+}
+.gallery-btn {
+  flex: 1;
+  border: none;
+  border-radius: 6px;
+  padding: 6px;
+  font-family: var(--font-d);
+  font-size: 0.65rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+.gallery-btn-download {
+  background: var(--ink);
+  color: var(--off-white);
+}
+.gallery-btn-download:hover { background: #3d3a36; }
+.gallery-btn-delete {
+  background: rgba(234, 67, 53, 0.1);
+  color: #ea4335;
+}
+.gallery-btn-delete:hover {
+  background: rgba(234, 67, 53, 0.2);
+}
+
+.gallery-empty {
+  grid-column: span 2;
+  text-align: center;
+  padding: 32px 16px;
+  border: 1.5px dashed rgba(42,40,37,0.15);
+  border-radius: var(--r-md);
+  color: var(--ink-muted);
+  font-size: 0.8rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.gallery-empty-icon {
+  font-size: 1.8rem;
+}
+
+.drawer-footer {
+  padding: 20px 24px;
+  border-top: 1px solid rgba(42,40,37,0.06);
+}
+.btn-logout {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid rgba(42,40,37,0.08);
+  border-radius: var(--r-pill);
+  padding: 10px;
+  color: #ea4335;
+  font-family: var(--font-d);
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.btn-logout:hover {
+  background: rgba(234, 67, 53, 0.05);
+  border-color: rgba(234, 67, 53, 0.2);
+}
+
+.parent-toast-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 10000;
+  pointer-events: none;
+}
+.parent-toast {
+  background: var(--ink);
+  color: var(--off-white);
+  border: 1.5px solid rgba(184, 165, 200, 0.2);
+  border-radius: var(--r-md);
+  padding: 12px 18px;
+  font-family: var(--font-d);
+  font-size: 0.82rem;
+  font-weight: 600;
+  box-shadow: var(--shadow-md);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  pointer-events: auto;
+  animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.parent-toast.fade-out {
+  animation: fadeOutDown 0.3s ease forwards;
+}
+
+.spinner-sm {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  display: inline-block;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes slideInRight {
+  from { transform: translateX(50px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+@keyframes fadeOutDown {
+  to { transform: translateY(15px); opacity: 0; }
 }
 </style>
 </head>
@@ -811,7 +1329,9 @@ a:focus-visible, button:focus-visible {
       <li><a href="#coba-langsung">Photobooth</a></li>
       <li><a href="#kata-mereka">Testimoni</a></li>
     </ul>
-    <a href="#coba-langsung" class="nav-cta">Coba Gratis</a>
+    <div id="nav-auth-container" class="nav-auth-container">
+      <button class="nav-cta" onclick="openAuthModal('login')">Masuk / Daftar</button>
+    </div>
   </div>
 </nav>
 
@@ -1082,24 +1602,694 @@ a:focus-visible, button:focus-visible {
   </div>
 </footer>
 
+<!-- ─── AUTH MODAL ──────────────────────────────── -->
+<div id="auth-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="auth-modal-title">
+  <div class="auth-card">
+    <button class="auth-close" onclick="closeAuthModal()" aria-label="Tutup">&times;</button>
+    <div class="auth-tabs" role="tablist">
+      <button id="tab-login" class="auth-tab active" role="tab" aria-selected="true" onclick="switchAuthTab('login')">Masuk</button>
+      <button id="tab-register" class="auth-tab" role="tab" aria-selected="false" onclick="switchAuthTab('register')">Daftar Baru</button>
+    </div>
+
+    <!-- Login Form -->
+    <form id="form-login" class="auth-form active" onsubmit="submitLogin(event)">
+      <h3 id="auth-modal-title" class="sr-only">Masuk ke Akun Yuphoria</h3>
+      <div class="form-field">
+        <label for="login-email">Email</label>
+        <input type="email" id="login-email" required placeholder="nama@email.com">
+      </div>
+      <div class="form-field">
+        <label for="login-password">Password</label>
+        <input type="password" id="login-password" required placeholder="••••••••">
+      </div>
+      <button type="submit" id="btn-login-submit" class="btn-auth-submit">
+        <span>Masuk</span>
+      </button>
+    </form>
+
+    <!-- Register Form -->
+    <form id="form-register" class="auth-form" onsubmit="submitRegister(event)">
+      <div class="form-field">
+        <label for="register-name">Nama Lengkap</label>
+        <input type="text" id="register-name" required placeholder="Budi Santoso">
+      </div>
+      <div class="form-field">
+        <label for="register-email">Email</label>
+        <input type="email" id="register-email" required placeholder="nama@email.com">
+      </div>
+      <div class="form-field">
+        <label for="register-password">Password</label>
+        <input type="password" id="register-password" required placeholder="••••••••">
+      </div>
+      <div class="form-field">
+        <label for="register-confirm">Konfirmasi Password</label>
+        <input type="password" id="register-confirm" required placeholder="••••••••">
+      </div>
+      <button type="submit" id="btn-register-submit" class="btn-auth-submit">
+        <span>Daftar Akun</span>
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- ─── DASHBOARD DRAWER ────────────────────────── -->
+<div id="dashboard-overlay" class="drawer-overlay" onclick="closeDashboard(event)">
+  <div class="dashboard-drawer" onclick="event.stopPropagation()">
+    <div class="drawer-header">
+      <div class="drawer-title-group">
+        <h3>Dashboard User</h3>
+        <p>Kelola personalisasi & galeri foto cetak Anda</p>
+      </div>
+      <button class="drawer-close" onclick="toggleDashboard()" aria-label="Tutup">&times;</button>
+    </div>
+
+    <div class="drawer-content">
+      <!-- Profile Header Card -->
+      <div class="drawer-profile-card">
+        <div class="profile-avatar-lg" id="profile-avatar">U</div>
+        <div class="profile-info">
+          <h4 id="profile-name">Nama Pengguna</h4>
+          <p id="profile-email">user@email.com</p>
+          <span class="profile-badge">Premium Member ✦</span>
+        </div>
+      </div>
+
+      <!-- Personalization Form -->
+      <div class="personalization-form">
+        <h4>Personalisasi Photobooth</h4>
+        <div class="form-field">
+          <label for="personal-name">Nama Profile</label>
+          <input type="text" id="personal-name" placeholder="Ubah nama kamu...">
+        </div>
+        <div class="form-field">
+          <label for="personal-brand">Default Label Frame</label>
+          <input type="text" id="personal-brand" placeholder="Default: yuphoria" maxlength="32">
+          <p style="font-size:0.7rem; color:var(--ink-muted); margin-top:2px;">Teks ini akan otomatis menghiasi bagian bawah strip fotomu di photobooth!</p>
+        </div>
+        <button class="btn-save-personalization" onclick="savePersonalization()">Simpan Perubahan</button>
+      </div>
+
+      <!-- Supabase Connection Config (Visible if using placeholders) -->
+      <div class="personalization-form" id="supabase-config-section" style="margin-top:20px;">
+        <h4>Supabase Connection Config</h4>
+        <p style="font-size:0.7rem; color:var(--ink-muted); margin-top:-6px;">Masukkan detail project Supabase Anda untuk mengaktifkan integrasi database Postgres.</p>
+        <div class="form-field">
+          <label for="sb-url-input">Supabase URL</label>
+          <input type="text" id="sb-url-input" placeholder="https://xxxxxx.supabase.co">
+        </div>
+        <div class="form-field">
+          <label for="sb-key-input">Supabase Anon Key</label>
+          <input type="password" id="sb-key-input" placeholder="eyJhbGciOiJIUzI1Ni...">
+        </div>
+        <button class="btn-save-personalization" onclick="saveSupabaseConfig()">Hubungkan Supabase</button>
+      </div>
+
+      <!-- Gallery Grid Section -->
+      <div class="gallery-section">
+        <div class="gallery-header">
+          <h4>Sesi Cetakan Saya</h4>
+          <span class="gallery-count" id="gallery-count">0</span>
+        </div>
+        <div class="gallery-grid" id="gallery-grid">
+          <!-- Populated by JavaScript -->
+        </div>
+      </div>
+    </div>
+
+    <div class="drawer-footer">
+      <button class="btn-logout" onclick="handleLogout()">Keluar dari Akun</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── PARENT TOAST CONTAINER ───────────────────── -->
+<div id="parent-toast-container" class="parent-toast-container"></div>
+
+<!-- Supabase CDN -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <script>
+  // ── Database & State Helpers ────────────────
+  let SUPABASE_URL = "%VITE_SUPABASE_URL%";
+  let SUPABASE_ANON_KEY = "%VITE_SUPABASE_ANON_KEY%";
+  let SUPABASE_PUB_KEY = "%VITE_SUPABASE_PUBLISHABLE_KEY%";
+
+  // Check if they are still Vite placeholders or empty
+  const isPlaceholder = (val) => !val || val.startsWith('%') || val.includes('your-project-id') || val.includes('...');
+
+  let activeUrl = isPlaceholder(SUPABASE_URL) ? '' : SUPABASE_URL;
+  let activeKey = isPlaceholder(SUPABASE_ANON_KEY) ? '' : SUPABASE_ANON_KEY;
+  if (!activeKey && !isPlaceholder(SUPABASE_PUB_KEY)) {
+    activeKey = SUPABASE_PUB_KEY;
+  }
+
+  if (!activeUrl || !activeKey) {
+    activeUrl = localStorage.getItem('yuphoria-supabase-url') || activeUrl;
+    activeKey = localStorage.getItem('yuphoria-supabase-anon-key') || activeKey;
+  }
+
+  let supabaseClient = null;
+  if (activeUrl && activeKey && !isPlaceholder(activeUrl) && !isPlaceholder(activeKey)) {
+    try {
+      supabaseClient = supabase.createClient(activeUrl, activeKey);
+      console.log("Supabase Client initialized successfully!");
+    } catch (e) {
+      console.error("Failed to initialize Supabase:", e);
+    }
+  }
+
+  let currentUser = null;
+
+  function isSupabaseActive() {
+    return supabaseClient !== null;
+  }
+
+  function getUsersStore() {
+    return JSON.parse(localStorage.getItem('yuphoria-users') || '{}');
+  }
+  function saveUsersStore(store) {
+    localStorage.setItem('yuphoria-users', JSON.stringify(store));
+  }
+  
+  function getCurrentUser() {
+    if (isSupabaseActive()) {
+      return currentUser;
+    } else {
+      const email = localStorage.getItem('yuphoria-session');
+      if (!email) return null;
+      const users = getUsersStore();
+      return users[email] || null;
+    }
+  }
+
+  // ── Toast System ────────────────────────────
+  function showParentToast(message, icon = '✨') {
+    const container = document.getElementById('parent-toast-container');
+    if (!container) return;
+    const toast = document.createElement('div');
+    toast.className = 'parent-toast';
+    toast.innerHTML = `<span class="toast-icon">${icon}</span><span class="toast-text">${message}</span>`;
+    container.appendChild(toast);
+    
+    // Auto remove
+    setTimeout(() => {
+      toast.classList.add('fade-out');
+      setTimeout(() => toast.remove(), 300);
+    }, 4000);
+  }
+
+  // ── Auth Modal Controller ───────────────────
+  const authModal = document.getElementById('auth-modal');
+  function openAuthModal(tab = 'login') {
+    if (!authModal) return;
+    authModal.classList.add('active');
+    authModal.removeAttribute('aria-hidden');
+    switchAuthTab(tab);
+  }
+  function closeAuthModal() {
+    if (!authModal) return;
+    authModal.classList.remove('active');
+    authModal.setAttribute('aria-hidden', 'true');
+    // Clear forms
+    document.getElementById('form-login').reset();
+    document.getElementById('form-register').reset();
+  }
+  function switchAuthTab(tab) {
+    const tabLogin = document.getElementById('tab-login');
+    const tabRegister = document.getElementById('tab-register');
+    const formLogin = document.getElementById('form-login');
+    const formRegister = document.getElementById('form-register');
+
+    if (tab === 'login') {
+      tabLogin.classList.add('active');
+      tabLogin.setAttribute('aria-selected', 'true');
+      tabRegister.classList.remove('active');
+      tabRegister.setAttribute('aria-selected', 'false');
+      formLogin.classList.add('active');
+      formRegister.classList.remove('active');
+    } else {
+      tabRegister.classList.add('active');
+      tabRegister.setAttribute('aria-selected', 'true');
+      tabLogin.classList.remove('active');
+      tabLogin.setAttribute('aria-selected', 'false');
+      formRegister.classList.add('active');
+      formLogin.classList.remove('active');
+    }
+  }
+
+  // ── Dashboard Drawer Controller ──────────────
+  const dashboardOverlay = document.getElementById('dashboard-overlay');
+  function toggleDashboard() {
+    if (!dashboardOverlay) return;
+    const isActive = dashboardOverlay.classList.toggle('active');
+    if (isActive) {
+      populateProfileDetails();
+      renderGallery();
+    }
+  }
+  function closeDashboard(e) {
+    if (e.target === dashboardOverlay) {
+      dashboardOverlay.classList.remove('active');
+    }
+  }
+
+  // ── Populate Profile & Personalization ──────
+  function populateProfileDetails() {
+    const user = getCurrentUser();
+    if (!user) return;
+    
+    document.getElementById('profile-avatar').textContent = user.name.charAt(0).toUpperCase();
+    document.getElementById('profile-name').textContent = user.name;
+    document.getElementById('profile-email').textContent = user.email;
+    
+    document.getElementById('personal-name').value = user.name;
+    document.getElementById('personal-brand').value = user.defaultLabel || '';
+
+    // Populate Supabase Settings
+    if (isPlaceholder("%VITE_SUPABASE_URL%")) {
+      document.getElementById('sb-url-input').value = localStorage.getItem('yuphoria-supabase-url') || '';
+      document.getElementById('sb-key-input').value = localStorage.getItem('yuphoria-supabase-anon-key') || '';
+    }
+  }
+
+  function savePersonalization() {
+    const user = getCurrentUser();
+    if (!user) return;
+
+    const newName = document.getElementById('personal-name').value.trim();
+    const newBrand = document.getElementById('personal-brand').value.trim();
+
+    if (!newName) {
+      showParentToast('Nama profile tidak boleh kosong.', '❌');
+      return;
+    }
+
+    if (isSupabaseActive()) {
+      supabaseClient.from('profiles').upsert({
+        id: user.id,
+        name: newName,
+        default_label: newBrand,
+        updated_at: new Date()
+      }).then(({ error }) => {
+        if (error) {
+          showParentToast(error.message, '❌');
+        } else {
+          currentUser.name = newName;
+          currentUser.defaultLabel = newBrand;
+          populateProfileDetails();
+          updateNavbar();
+          syncAuthWithIframe();
+          showParentToast('Personalisasi disimpan ke Supabase!', '💾');
+        }
+      });
+    } else {
+      const users = getUsersStore();
+      user.name = newName;
+      user.defaultLabel = newBrand;
+      users[user.email] = user;
+      saveUsersStore(users);
+
+      populateProfileDetails();
+      updateNavbar();
+      syncAuthWithIframe();
+      showParentToast('Personalisasi disimpan (Simulasi)!', '💾');
+    }
+  }
+
+  function saveSupabaseConfig() {
+    const url = document.getElementById('sb-url-input').value.trim();
+    const key = document.getElementById('sb-key-input').value.trim();
+    if (!url || !key) {
+      showParentToast('URL dan Anon Key tidak boleh kosong.', '❌');
+      return;
+    }
+    localStorage.setItem('yuphoria-supabase-url', url);
+    localStorage.setItem('yuphoria-supabase-anon-key', key);
+    showParentToast('Supabase terhubung! Me-refresh halaman...', '✨');
+    setTimeout(() => {
+      window.location.reload();
+    }, 1500);
+  }
+
+  // ── Submit Login ───────────────────────────
+  async function submitLogin(e) {
+    e.preventDefault();
+    const email = document.getElementById('login-email').value.trim().toLowerCase();
+    const password = document.getElementById('login-password').value;
+    const submitBtn = document.getElementById('btn-login-submit');
+
+    submitBtn.innerHTML = '<span class="spinner-sm"></span>';
+    submitBtn.disabled = true;
+
+    if (isSupabaseActive()) {
+      const { data, error } = await supabaseClient.auth.signInWithPassword({
+        email: email,
+        password: password
+      });
+      
+      if (error) {
+        showParentToast(error.message, '❌');
+        submitBtn.innerHTML = '<span>Masuk</span>';
+        submitBtn.disabled = false;
+        return;
+      }
+      
+      closeAuthModal();
+      submitBtn.innerHTML = '<span>Masuk</span>';
+      submitBtn.disabled = false;
+    } else {
+      const users = getUsersStore();
+      const user = users[email];
+
+      if (!user || user.password !== password) {
+        showParentToast('Email atau password salah.', '❌');
+        submitBtn.innerHTML = '<span>Masuk</span>';
+        submitBtn.disabled = false;
+        return;
+      }
+
+      setTimeout(() => {
+        localStorage.setItem('yuphoria-session', email);
+        closeAuthModal();
+        updateNavbar();
+        syncAuthWithIframe();
+        showParentToast(`Selamat datang kembali, ${user.name}!`, '👋');
+        submitBtn.innerHTML = '<span>Masuk</span>';
+        submitBtn.disabled = false;
+      }, 1000);
+    }
+  }
+
+  // ── Submit Register ────────────────────────
+  async function submitRegister(e) {
+    e.preventDefault();
+    const name = document.getElementById('register-name').value.trim();
+    const email = document.getElementById('register-email').value.trim().toLowerCase();
+    const password = document.getElementById('register-password').value;
+    const confirm = document.getElementById('register-confirm').value;
+    const submitBtn = document.getElementById('btn-register-submit');
+
+    if (password !== confirm) {
+      showParentToast('Konfirmasi password tidak cocok.', '❌');
+      return;
+    }
+
+    submitBtn.innerHTML = '<span class="spinner-sm"></span>';
+    submitBtn.disabled = true;
+
+    if (isSupabaseActive()) {
+      const { data, error } = await supabaseClient.auth.signUp({
+        email: email,
+        password: password,
+        options: {
+          data: { name: name }
+        }
+      });
+      
+      if (error) {
+        showParentToast(error.message, '❌');
+        submitBtn.innerHTML = '<span>Daftar Akun</span>';
+        submitBtn.disabled = false;
+        return;
+      }
+
+      if (data.user) {
+        await supabaseClient.from('profiles').upsert({
+          id: data.user.id,
+          name: name,
+          default_label: 'yuphoria'
+        });
+      }
+      
+      closeAuthModal();
+      showParentToast('Registrasi sukses! Silakan cek email Anda untuk konfirmasi.', '✉️');
+      submitBtn.innerHTML = '<span>Daftar Akun</span>';
+      submitBtn.disabled = false;
+    } else {
+      const users = getUsersStore();
+      if (users[email]) {
+        showParentToast('Email sudah terdaftar.', '❌');
+        submitBtn.innerHTML = '<span>Daftar Akun</span>';
+        submitBtn.disabled = false;
+        return;
+      }
+
+      setTimeout(() => {
+        users[email] = {
+          name,
+          email,
+          password,
+          defaultLabel: 'yuphoria'
+        };
+        saveUsersStore(users);
+        localStorage.setItem('yuphoria-session', email);
+
+        closeAuthModal();
+        updateNavbar();
+        syncAuthWithIframe();
+        showParentToast(`Registrasi sukses! Selamat datang, ${name}.`, '✨');
+        submitBtn.innerHTML = '<span>Daftar Akun</span>';
+        submitBtn.disabled = false;
+      }, 1000);
+    }
+  }
+
+  // ── Handle Logout ──────────────────────────
+  async function handleLogout() {
+    if (isSupabaseActive()) {
+      await supabaseClient.auth.signOut();
+      dashboardOverlay.classList.remove('active');
+      showParentToast('Anda berhasil keluar.', '👋');
+    } else {
+      localStorage.removeItem('yuphoria-session');
+      dashboardOverlay.classList.remove('active');
+      updateNavbar();
+      syncAuthWithIframe();
+      showParentToast('Anda berhasil keluar.', '👋');
+    }
+  }
+
+  // ── Gallery Operations ──────────────────────
+  async function renderGallery() {
+    const user = getCurrentUser();
+    const grid = document.getElementById('gallery-grid');
+    const countBadge = document.getElementById('gallery-count');
+    if (!grid || !user) return;
+    
+    let userStrips = [];
+
+    if (isSupabaseActive()) {
+      grid.innerHTML = '<div style="grid-column: span 2; text-align:center; padding: 24px;"><span class="spinner-sm"></span><p style="font-size:0.75rem; color:var(--ink-muted); margin-top:8px;">Memuat galeri dari Supabase...</p></div>';
+      
+      const { data, error } = await supabaseClient
+        .from('strips')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error(error);
+        showParentToast('Gagal memuat galeri dari database.', '❌');
+        grid.innerHTML = '<div class="gallery-empty"><p>Gagal memuat foto dari Supabase.</p></div>';
+        return;
+      }
+      
+      userStrips = data || [];
+    } else {
+      const savedStrips = JSON.parse(localStorage.getItem('yuphoria-saved-strips') || '{}');
+      userStrips = savedStrips[user.email] || [];
+    }
+    
+    countBadge.textContent = userStrips.length;
+    
+    if (userStrips.length === 0) {
+      grid.innerHTML = `
+        <div class="gallery-empty">
+          <span class="gallery-empty-icon">📸</span>
+          <p>Belum ada foto yang disimpan.</p>
+          <p style="font-size: 0.72rem; color: var(--ink-muted);">Ambil sesi foto di photobooth & klik unduh strip cetak untuk menyimpannya di galeri ini.</p>
+        </div>
+      `;
+      return;
+    }
+    
+    grid.innerHTML = userStrips.map((strip, idx) => {
+      const idKey = isSupabaseActive() ? `'${strip.id}'` : idx;
+      const deleteParams = isSupabaseActive() ? `'${strip.id}'` : `'${user.email}', ${idx}`;
+      return `
+        <div class="gallery-item">
+          <div class="gallery-thumb-wrap">
+            <img src="${strip.data_url || strip.dataUrl}" class="gallery-thumb" alt="Yuphoria Strip">
+          </div>
+          <div class="gallery-details">
+            <span class="gallery-label">${strip.label}</span>
+            <span class="gallery-date">${strip.date}</span>
+          </div>
+          <div class="gallery-actions">
+            <button class="gallery-btn gallery-btn-download" onclick="downloadStripFromGallery(${idKey})" title="Download">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3m0 12l-4-4m4 4l4-4"/><path d="M3 17v2a2 2 0 002 2h14a2 2 0 002-2v-2"/></svg>
+              Unduh
+            </button>
+            <button class="gallery-btn gallery-btn-delete" onclick="deleteStripFromGallery(${deleteParams})" title="Hapus">
+              Hapus
+            </button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  async function downloadStripFromGallery(idOrIdx) {
+    let dataUrl = '';
+    if (isSupabaseActive()) {
+      const { data, error } = await supabaseClient
+        .from('strips')
+        .select('data_url')
+        .eq('id', idOrIdx)
+        .single();
+
+      if (error || !data) {
+        showParentToast('Gagal mengunduh foto.', '❌');
+        return;
+      }
+      dataUrl = data.data_url;
+    } else {
+      const user = getCurrentUser();
+      const savedStrips = JSON.parse(localStorage.getItem('yuphoria-saved-strips') || '{}');
+      const userStrips = savedStrips[user.email] || [];
+      const strip = userStrips[idOrIdx];
+      if (!strip) return;
+      dataUrl = strip.dataUrl;
+    }
+
+    const downloadLink = document.createElement('a');
+    downloadLink.href = dataUrl;
+    downloadLink.download = `yuphoria-gallery-strip-${Date.now()}.jpg`;
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+    document.body.removeChild(downloadLink);
+    showParentToast('Foto strip diunduh dari Galeri!', '💾');
+  }
+
+  async function deleteStripFromGallery(idOrEmail, idx) {
+    if (!confirm('Apakah Anda yakin ingin menghapus cetakan foto ini dari galeri?')) return;
+    
+    if (isSupabaseActive()) {
+      const { error } = await supabaseClient
+        .from('strips')
+        .delete()
+        .eq('id', idOrEmail);
+
+      if (error) {
+        showParentToast(error.message, '❌');
+        return;
+      }
+      renderGallery();
+      showParentToast('Foto strip dihapus dari database.', '🗑️');
+    } else {
+      const savedStrips = JSON.parse(localStorage.getItem('yuphoria-saved-strips') || '{}');
+      const userStrips = savedStrips[idOrEmail] || [];
+      userStrips.splice(idx, 1);
+      savedStrips[idOrEmail] = userStrips;
+      localStorage.setItem('yuphoria-saved-strips', JSON.stringify(savedStrips));
+      renderGallery();
+      showParentToast('Foto strip dihapus dari galeri.', '🗑️');
+    }
+  }
+
+  // ── Navbar Updates & Iframe Syncing ─────────
+  function updateNavbar() {
+    const user = getCurrentUser();
+    const container = document.getElementById('nav-auth-container');
+    if (!container) return;
+    if (user) {
+      const firstLetter = user.name.charAt(0).toUpperCase();
+      container.innerHTML = `
+        <div class="nav-user-badge" onclick="toggleDashboard()">
+          <div class="nav-avatar">${firstLetter}</div>
+          <span class="nav-user-name">${user.name}</span>
+        </div>
+      `;
+    } else {
+      container.innerHTML = `
+        <button class="nav-cta" onclick="openAuthModal('login')">Masuk / Daftar</button>
+      `;
+    }
+  }
+
+  function syncAuthWithIframe() {
+    const user = getCurrentUser();
+    const iframe = document.getElementById('try-iframe');
+    if (iframe && iframe.contentWindow) {
+      iframe.contentWindow.postMessage({
+        type: 'yuphoria:auth-state',
+        isLoggedIn: !!user,
+        user: user ? {
+          name: user.name,
+          email: user.email,
+          defaultLabel: user.defaultLabel || ''
+        } : null
+      }, '*');
+    }
+  }
+
   // ── Auth gate ──────────────────────────────
   const gate    = document.getElementById('auth-gate');
   let   shown   = false;
 
-  // The photobooth (photobooth.html) can trigger the gate by posting:
-  // window.parent.postMessage('yuphoria:session-complete', '*')
   window.addEventListener('message', e => {
     if (e.origin !== location.origin) return;
-    if (e.data === 'yuphoria:session-complete' && !shown) showGate();
+    
+    if (e.data && e.data.type === 'yuphoria:open-auth') {
+      openAuthModal(e.data.tab || 'login');
+    } else if (e.data && e.data.type === 'yuphoria:save-strip') {
+      const user = getCurrentUser();
+      if (user) {
+        if (isSupabaseActive()) {
+          supabaseClient.from('strips').insert({
+            user_id: user.id,
+            data_url: e.data.dataUrl,
+            label: e.data.label,
+            date: e.data.date
+          }).then(({ error }) => {
+            if (error) {
+              console.error(error);
+              showParentToast('Gagal menyimpan foto ke database.', '❌');
+            } else {
+              showParentToast('Foto strip disimpan ke Supabase!', '📸');
+            }
+          });
+        } else {
+          const savedStrips = JSON.parse(localStorage.getItem('yuphoria-saved-strips') || '{}');
+          const userStrips = savedStrips[user.email] || [];
+          userStrips.unshift({
+            id: 'strip-' + Date.now(),
+            dataUrl: e.data.dataUrl,
+            date: e.data.date,
+            label: e.data.label
+          });
+          savedStrips[user.email] = userStrips;
+          localStorage.setItem('yuphoria-saved-strips', JSON.stringify(savedStrips));
+          showParentToast('Foto strip disimpan ke galeri (Simulasi)!', '📸');
+        }
+      }
+    } else if (e.data === 'yuphoria:session-complete' && !shown) {
+      const user = getCurrentUser();
+      if (!user) {
+        showGate();
+      }
+    }
   });
 
   // Fallback: show gate after 2 min of photobooth being in viewport
   const io = new IntersectionObserver(entries => {
     entries.forEach(entry => {
       clearTimeout(io._t);
-      if (entry.isIntersecting)
-        io._t = setTimeout(() => { if (!shown) showGate(); }, 120_000);
+      if (entry.isIntersecting) {
+        io._t = setTimeout(() => {
+          const user = getCurrentUser();
+          if (!shown && !user) showGate();
+        }, 120_000);
+      }
     });
   }, { threshold: 0.2 });
   const tryIframe = document.getElementById('try-iframe');
@@ -1117,9 +2307,10 @@ a:focus-visible, button:focus-visible {
     gate.classList.remove('visible');
     gate.setAttribute('aria-hidden', 'true');
   }
+  
   function handleLogin() {
-    // TODO: replace with real auth URL e.g. /auth/google
-    alert('Auth coming soon — wire up your provider here.');
+    openAuthModal('login');
+    dismissGate();
   }
 
   // ── Nav scroll shadow ──────────────────────
@@ -1136,6 +2327,55 @@ a:focus-visible, button:focus-visible {
       const el = document.getElementById(a.getAttribute('href').slice(1));
       if (el) { e.preventDefault(); el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
     });
+  });
+
+  // ── Initial Setup on Page Load ─────────────
+  window.addEventListener('DOMContentLoaded', () => {
+    // Hide Supabase settings if URL and Key are built-in (not placeholders)
+    const hasBuiltInUrl = !isPlaceholder("%VITE_SUPABASE_URL%");
+    const hasBuiltInKey = !isPlaceholder("%VITE_SUPABASE_ANON_KEY%") || !isPlaceholder("%VITE_SUPABASE_PUBLISHABLE_KEY%");
+    if (hasBuiltInUrl && hasBuiltInKey) {
+      const configSec = document.getElementById('supabase-config-section');
+      if (configSec) configSec.style.display = 'none';
+    }
+
+    if (isSupabaseActive()) {
+      // Supabase Active Session Listener
+      supabaseClient.auth.onAuthStateChange(async (event, session) => {
+        if (session && session.user) {
+          const { data: profile } = await supabaseClient
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+            
+          currentUser = {
+            id: session.user.id,
+            name: profile ? profile.name : (session.user.user_metadata.name || 'User'),
+            email: session.user.email,
+            defaultLabel: profile ? profile.default_label : 'yuphoria'
+          };
+        } else {
+          currentUser = null;
+        }
+        updateNavbar();
+        syncAuthWithIframe();
+        if (dashboardOverlay.classList.contains('active')) {
+          populateProfileDetails();
+          renderGallery();
+        }
+      });
+    } else {
+      updateNavbar();
+    }
+    
+    // Sync status with iframe once it is loaded
+    const iframe = document.getElementById('try-iframe');
+    if (iframe) {
+      iframe.addEventListener('load', () => {
+        syncAuthWithIframe();
+      });
+    }
   });
 </script>
 

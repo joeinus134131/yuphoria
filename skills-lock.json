@@ -1,6 +1,12 @@
 {
   "version": 1,
   "skills": {
+    "frontend-developer": {
+      "source": "rmyndharis/antigravity-skills",
+      "sourceType": "github",
+      "skillPath": "skills/frontend-developer/SKILL.md",
+      "computedHash": "889cc99236908a5f3176b41182ae7419c6ecc758b5a3d742560c6ba557d68171"
+    },
     "landing-page": {
       "source": "jezweb/claude-skills",
       "sourceType": "github",
