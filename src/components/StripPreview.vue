@@ -657,7 +657,21 @@ const compile4StripVideo = (photos) => {
                 recCtx.filter = filterMap[settings.filter];
               }
 
-              recCtx.drawImage(v, pos.x, pos.y, pos.w, pos.h);
+              const sWidth = v.videoWidth || pos.w;
+              const sHeight = v.videoHeight || pos.h;
+              const sAspect = sWidth / sHeight;
+              const tAspect = pos.w / pos.h;
+
+              let sx = 0, sy = 0, sw = sWidth, sh = sHeight;
+              if (sAspect > tAspect) {
+                sw = sHeight * tAspect;
+                sx = (sWidth - sw) / 2;
+              } else if (sAspect < tAspect) {
+                sh = sWidth / tAspect;
+                sy = (sHeight - sh) / 2;
+              }
+
+              recCtx.drawImage(v, sx, sy, sw, sh, pos.x, pos.y, pos.w, pos.h);
               recCtx.restore();
             });
 

@@ -26,7 +26,7 @@
             playsinline 
             muted 
             aria-label="Pratinjau kamera langsung"
-            :class="{ hidden: isUsingSimulator }"
+            :class="{ hidden: isUsingSimulator, mirrored: facingMode === 'user' }"
             :style="{ filter: currentFilterStyle }"
           ></video>
           <canvas 
@@ -89,6 +89,14 @@
             <circle cx="12" cy="13" r="4"></circle>
           </svg>
         </button>
+        <button v-if="!isUsingSimulator" id="switch-camera-facing-btn" class="icon-btn border-btn" @click="toggleCameraFacing" aria-label="Ganti kamera depan/belakang" title="Ganti kamera depan/belakang">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+            <path d="M3 3v5h5"></path>
+            <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"></path>
+            <path d="M16 16h5v5"></path>
+          </svg>
+        </button>
       </div>
     </div>
   </section>
@@ -121,6 +129,7 @@ const isFlashing = ref(false);
 const isCountingDown = ref(false);
 const countdownTimer = ref(3);
 const currentPhotoIndex = ref(0);
+const facingMode = ref('user');
  
 let localStream = null;
 let simulatorIntervalId = null;
@@ -215,6 +224,11 @@ const toggleCameraSource = () => {
   isUsingSimulator.value = !isUsingSimulator.value;
   setupCamera();
 };
+
+const toggleCameraFacing = () => {
+  facingMode.value = facingMode.value === 'user' ? 'environment' : 'user';
+  setupCamera();
+};
  
 const setupCamera = async () => {
   stopCameraStream();
@@ -230,7 +244,7 @@ const setupCamera = async () => {
  
   try {
     const constraints = {
-      video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: 'user' },
+      video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: facingMode.value },
       audio: false
     };
  
@@ -414,11 +428,33 @@ const captureSnapshot = (photoIndex) => {
   snapCanvas.height = 480;
   const snapCtx = snapCanvas.getContext('2d');
  
-  snapCtx.translate(640, 0);
-  snapCtx.scale(-1, 1);
+  if (facingMode.value === 'user') {
+    snapCtx.translate(640, 0);
+    snapCtx.scale(-1, 1);
+  }
  
   if (!isUsingSimulator.value && webcamFeed.value) {
-    snapCtx.drawImage(webcamFeed.value, 0, 0, 640, 480);
+    const video = webcamFeed.value;
+    const sWidth = video.videoWidth || 640;
+    const sHeight = video.videoHeight || 480;
+    const tWidth = 640;
+    const tHeight = 480;
+
+    const sAspect = sWidth / sHeight;
+    const tAspect = tWidth / tHeight;
+
+    let sx = 0, sy = 0, sw = sWidth, sh = sHeight;
+    if (sAspect > tAspect) {
+      // Stream is wider (e.g. 16:9), crop the sides
+      sw = sHeight * tAspect;
+      sx = (sWidth - sw) / 2;
+    } else if (sAspect < tAspect) {
+      // Stream is taller (e.g. portrait 9:16), crop top and bottom
+      sh = sWidth / tAspect;
+      sy = (sHeight - sh) / 2;
+    }
+
+    snapCtx.drawImage(video, sx, sy, sw, sh, 0, 0, tWidth, tHeight);
   } else if (fallbackCanvas.value) {
     snapCtx.drawImage(fallbackCanvas.value, 0, 0, 640, 480);
   }
@@ -607,8 +643,11 @@ const playShutterSound = () => {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transform: scaleX(-1);
   display: block;
+}
+
+#webcam-feed.mirrored, #fallback-canvas {
+  transform: scaleX(-1);
 }
  
 .viewfinder-footer {
