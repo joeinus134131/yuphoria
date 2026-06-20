@@ -36,12 +36,13 @@
               v-for="(t, key) in themes" 
               :key="key"
               class="theme-btn"
-              :class="{ active: settings.theme === key }"
+              :class="{ active: settings.theme === key, 'theme-locked-btn': isThemeLocked(key) }"
               :style="{ background: t.bg, color: t.color, borderColor: t.borderColor }"
               @click="setTheme(key)"
             >
               {{ t.name }}
-              <span v-if="t.decorations.length > 0" class="theme-badge">{{ t.decorations[0] }}</span>
+              <span v-if="isThemeLocked(key)" class="premium-lock" title="Fitur Premium">🔒</span>
+              <span v-else-if="t.decorations.length > 0" class="theme-badge">{{ t.decorations[0] }}</span>
             </button>
           </div>
         </fieldset>
@@ -50,9 +51,22 @@
         <fieldset v-if="settings.theme === 'classic' || settings.theme === 'minimal'" class="form-group margin-top-lg">
           <legend class="form-legend">Pilih Warna Frame</legend>
           <div class="color-grid" id="colors-container">
-            <label v-for="(colorConf, name) in frameColors" :key="name" class="color-option" :for="'color-' + name" :title="name">
-              <input type="radio" :id="'color-' + name" :value="name" v-model="settings.frameColor" @change="announceColor">
+            <label 
+              v-for="(colorConf, name) in frameColors" 
+              :key="name" 
+              class="color-option" 
+              :for="'color-' + name" 
+              :title="name"
+              @click.prevent="setColor(name)"
+            >
+              <input 
+                type="radio" 
+                :id="'color-' + name" 
+                :value="name" 
+                :checked="settings.frameColor === name"
+              >
               <span class="color-circle" :class="{ 'cyberpunk-gradient-bg': colorConf.isGradient }" :style="!colorConf.isGradient ? { backgroundColor: colorConf.bg } : {}" aria-hidden="true"></span>
+              <span v-if="isColorLocked(name)" class="premium-lock-color">🔒</span>
               <span class="sr-only">{{ name }}</span>
             </label>
           </div>
@@ -185,6 +199,20 @@
         </fieldset>
       </div>
     </div>
+
+    <!-- Dialog for unlocking premium features -->
+    <div v-if="showPrompt" class="unlock-overlay">
+      <div class="unlock-dialog">
+        <div class="unlock-emoji">✦</div>
+        <h4>Tema Premium Terkunci</h4>
+        <p>Masuk atau daftarkan akun gratis sekarang untuk membuka semua tema estetik & frame gradient secara gratis selamanya!</p>
+        <div class="unlock-actions">
+          <button class="btn-unlock-confirm" @click="requestAuth">Masuk / Daftar Gratis</button>
+          <button class="btn-unlock-cancel" @click="showPrompt = false">Kembali</button>
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
 
@@ -197,12 +225,31 @@ const {
   stickers, 
   themes, 
   frameColors, 
+  isLoggedIn,
   addSticker, 
   clearStickers, 
   announceToScreenReader 
 } = usePhotobooth();
 
 const activeTab = ref('filters');
+
+const premiumThemes = ['neon', 'y2k', 'cottage', 'spooky'];
+const premiumColors = ['cyber'];
+
+const showPrompt = ref(false);
+
+const isThemeLocked = (themeKey) => {
+  return premiumThemes.includes(themeKey) && !isLoggedIn.value;
+};
+
+const isColorLocked = (colorName) => {
+  return premiumColors.includes(colorName) && !isLoggedIn.value;
+};
+
+const requestAuth = () => {
+  window.parent.postMessage({ type: 'yuphoria:open-auth', tab: 'register' }, '*');
+  showPrompt.value = false;
+};
 
 const tabItems = [
   { value: 'filters', label: 'Filter' },
@@ -270,6 +317,10 @@ const borderOptions = [
 ];
 
 const setTheme = (themeKey) => {
+  if (isThemeLocked(themeKey)) {
+    showPrompt.value = true;
+    return;
+  }
   settings.theme = themeKey;
   
   if (themeKey === 'classic') {
@@ -279,6 +330,15 @@ const setTheme = (themeKey) => {
   }
   
   announceToScreenReader(`Mengubah tema menjadi ${themes[themeKey].name}`);
+};
+
+const setColor = (colorName) => {
+  if (isColorLocked(colorName)) {
+    showPrompt.value = true;
+    return;
+  }
+  settings.frameColor = colorName;
+  announceColor();
 };
 
 const addStickerToStrip = (emoji) => {
@@ -754,4 +814,145 @@ const setBorderSize = (borderVal) => {
 /* Helper Utilities */
 .margin-top-md { margin-top: 14px; }
 .margin-top-lg { margin-top: 20px; }
+
+/* Premium Lock Overlay & Dialog Styles */
+.premium-lock {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  font-size: 0.75rem;
+  background: var(--bg-primary);
+  border: 1px solid rgba(255, 46, 147, 0.4);
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.premium-lock-color {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  font-size: 0.65rem;
+  background: var(--bg-primary);
+  border: 1px solid rgba(255, 46, 147, 0.4);
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  z-index: 2;
+}
+
+.theme-locked-btn {
+  opacity: 0.75;
+  filter: grayscale(0.2);
+}
+
+.unlock-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(12, 10, 20, 0.88);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  border-radius: inherit;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.unlock-dialog {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--border-radius-md);
+  padding: 24px;
+  width: 90%;
+  max-width: 320px;
+  text-align: center;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+  animation: scaleUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.unlock-emoji {
+  font-size: 2rem;
+  margin-bottom: 12px;
+  background: linear-gradient(135deg, var(--accent-magenta), var(--accent-purple));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: inline-block;
+  animation: bounce 2s infinite;
+}
+
+.unlock-dialog h4 {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #fff;
+  margin-bottom: 8px;
+}
+
+.unlock-dialog p {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-bottom: 20px;
+}
+
+.unlock-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.btn-unlock-confirm {
+  background: linear-gradient(135deg, var(--accent-purple), var(--accent-magenta));
+  color: #fff;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.85rem;
+  padding: 10px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform var(--transition-fast);
+}
+
+.btn-unlock-confirm:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.1);
+}
+
+.btn-unlock-cancel {
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 0.85rem;
+  padding: 8px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.btn-unlock-cancel:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+@keyframes scaleUp {
+  from { transform: scale(0.9); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
 </style>

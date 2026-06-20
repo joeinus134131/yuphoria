@@ -3,6 +3,8 @@ import { ref, reactive, computed } from 'vue';
 const isUsingSimulator = ref(false);
 const isSessionActive = ref(false);
 const capturedPhotos = ref([]);
+const isLoggedIn = ref(false);
+const user = ref(null);
 
 const settings = reactive({
   filter: 'normal',
@@ -17,6 +19,26 @@ const settings = reactive({
   photosPerStrip: 4,
   countdown: 3
 });
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('message', (event) => {
+    if (event.origin !== window.location.origin) return;
+    const data = event.data;
+    if (data && data.type === 'yuphoria:auth-state') {
+      isLoggedIn.value = data.isLoggedIn;
+      user.value = data.user;
+      
+      // Auto-set the custom label if the user has a default branding label
+      if (data.isLoggedIn && data.user && data.user.defaultLabel) {
+        settings.customLabel = data.user.defaultLabel;
+      }
+    } else if (data && data.type === 'yuphoria:logout') {
+      isLoggedIn.value = false;
+      user.value = null;
+      settings.customLabel = '';
+    }
+  });
+}
 
 const totalPhotosNeeded = computed(() => {
   return parseInt(settings.photosPerStrip) || 4;
@@ -156,6 +178,8 @@ export function usePhotobooth() {
     filterMap,
     frameColors,
     themes,
+    isLoggedIn,
+    user,
     addPhoto,
     addSticker,
     removeSticker,

@@ -146,6 +146,7 @@ const {
   filterMap, 
   frameColors,
   themes,
+  isLoggedIn,
   removeSticker,
   announceToScreenReader 
 } = usePhotobooth();
@@ -966,6 +967,19 @@ const compileAndDownloadStrip = async () => {
   }, 100);
 
   announceToScreenReader('Foto strip berhasil diunduh ke perangkat Anda.');
+
+  // If logged in, send strip details to parent landing page to save in user gallery
+  if (isLoggedIn.value) {
+    window.parent.postMessage({
+      type: 'yuphoria:save-strip',
+      dataUrl: dataUrl,
+      date: currentDate.value,
+      label: displayLabel.value
+    }, '*');
+  }
+
+  // Trigger the auth wall / session completed hook in parent window
+  window.parent.postMessage('yuphoria:session-complete', '*');
 };
 
 const triggerPrinterAnimation = () => {

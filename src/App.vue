@@ -1,79 +1,78 @@
 <template>
-  <!-- Header -->
-  <header class="app-header">
-    <div class="header-container">
-      <div class="logo-group">
-        <span class="logo-dot" aria-hidden="true"></span>
-        <h1>yuphoria</h1>
+  <div class="booth-container">
+    <!-- Floating theme toggle button in the corner -->
+    <button id="theme-toggle" class="floating-theme-toggle" aria-label="Ganti mode warna" title="Ganti mode warna" @click="toggleTheme">
+      <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <circle cx="12" cy="12" r="4"></circle>
+        <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path>
+      </svg>
+    </button>
+
+    <!-- Main Grid Layout -->
+    <main id="main-content" class="app-main">
+      <div class="main-container">
+        
+        <!-- Left Column: Camera / Capture Suite -->
+        <PhotoBooth />
+
+        <!-- Right Column: Control panel & Live customization strip preview -->
+        <section class="control-panel-section" aria-labelledby="customization-heading">
+          <h2 id="customization-heading" class="sr-only">Panel Kustomisasi & Hasil</h2>
+
+          <div class="control-grid">
+            <!-- Customization Form -->
+            <CustomizerPanel />
+
+            <!-- Live strip preview & download -->
+            <StripPreview />
+          </div>
+        </section>
+
       </div>
-      <p class="tagline">Tempat memori indah dicetak dalam satu strip visual.</p>
-      <div class="header-actions">
-        <a href="/" class="back-link" title="Kembali ke beranda">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-            <path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-          Beranda
-        </a>
-        <button id="theme-toggle" class="icon-btn" aria-label="Ganti mode warna" title="Ganti mode warna" @click="toggleTheme">
-          <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-            <circle cx="12" cy="12" r="4"></circle>
-            <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path>
-          </svg>
-        </button>
+    </main>
+
+    <!-- Toast Notification -->
+    <Transition name="toast-fade">
+      <div v-if="toastMessage" class="sync-toast" role="status" aria-live="polite">
+        <span class="toast-icon">✨</span>
+        <span class="toast-text">{{ toastMessage }}</span>
       </div>
-    </div>
-  </header>
-
-  <!-- Main Grid Layout -->
-  <main id="main-content" class="app-main">
-    <div class="main-container">
-      
-      <!-- Left Column: Camera / Capture Suite -->
-      <PhotoBooth />
-
-      <!-- Right Column: Control panel & Live customization strip preview -->
-      <section class="control-panel-section" aria-labelledby="customization-heading">
-        <h2 id="customization-heading" class="sr-only">Panel Kustomisasi & Hasil</h2>
-
-        <div class="control-grid">
-          <!-- Customization Form -->
-          <CustomizerPanel />
-
-          <!-- Live strip preview & download -->
-          <StripPreview />
-        </div>
-      </section>
-
-    </div>
-  </main>
-
-  <!-- Footer -->
-  <footer class="app-footer">
-    <div class="footer-container">
-      <div class="footer-left">
-        <p>&copy;&nbsp;2026 yuphoria. Dibuat dengan penuh dedikasi estetika dan Vue.js.</p>
-      </div>
-      <div class="footer-right">
-        <nav aria-label="Tautan navigasi sekunder">
-          <ul class="footer-links">
-            <li><a href="#camera-status-indicator" class="footer-link">Status Studio</a></li>
-            <li><a href="/#cara-kerja" class="footer-link">Cara Kerja</a></li>
-            <li><a href="#customizer-form" class="footer-link">Atur Filter</a></li>
-          </ul>
-        </nav>
-      </div>
-    </div>
-  </footer>
+    </Transition>
+  </div>
 </template>
 
 <script setup>
-import { onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import PhotoBooth from './components/PhotoBooth.vue';
 import CustomizerPanel from './components/CustomizerPanel.vue';
 import StripPreview from './components/StripPreview.vue';
 import { usePhotobooth } from './composables/usePhotobooth';
 
-const { announceToScreenReader } = usePhotobooth();
+const { announceToScreenReader, isLoggedIn, user } = usePhotobooth();
+
+const toastMessage = ref('');
+let toastTimeout = null;
+
+const showToast = (msg) => {
+  toastMessage.value = msg;
+  announceToScreenReader(msg);
+  clearTimeout(toastTimeout);
+  toastTimeout = setTimeout(() => {
+    toastMessage.value = '';
+  }, 4000);
+};
+
+// Watch for authentication state changes and show a welcome toast
+watch(isLoggedIn, (newVal, oldVal) => {
+  // Only trigger toast if it's a transition (oldVal is defined)
+  if (oldVal !== undefined) {
+    if (newVal && user.value) {
+      showToast(`Akun terhubung! Selamat datang, ${user.value.name}. Fitur premium aktif!`);
+    } else if (!newVal) {
+      showToast('Mode anonim. Fitur premium dikunci.');
+    }
+  }
+}, { immediate: false });
 
 const toggleTheme = () => {
   const isLight = document.documentElement.classList.toggle('light');
@@ -90,100 +89,37 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* App Layout */
-.app-header {
-  border-bottom: 1px solid var(--border-color);
-  background-color: rgba(var(--bg-secondary), 0.7);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  position: sticky;
-  top: 0;
-  z-index: 100;
+/* Widget Container & Theme Toggle */
+.booth-container {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  background-color: var(--bg-primary);
   transition: background-color var(--transition-normal);
 }
 
-.header-container {
-  max-width: var(--max-width);
-  margin: 0 auto;
-  padding: 16px 24px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.logo-group {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.logo-dot {
-  width: 12px;
-  height: 12px;
+.floating-theme-toggle {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 10;
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--accent-magenta), var(--accent-purple));
-  box-shadow: 0 0 10px var(--accent-magenta);
-}
-
-.logo-group h1 {
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: 1.8rem;
-  letter-spacing: -0.05em;
-  background: linear-gradient(135deg, var(--text-primary) 30%, var(--accent-magenta) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.badge {
-  background: var(--border-color);
-  color: var(--accent-magenta);
-  font-size: 0.75rem;
-  font-family: var(--font-display);
-  font-weight: 700;
-  padding: 2px 8px;
-  border-radius: 99px;
-  border: 1px solid rgba(var(--accent-magenta), 0.2);
-}
-
-.tagline {
-  font-size: 0.9rem;
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-color);
   color: var(--text-secondary);
-  font-weight: 400;
-  display: none;
-}
-
-@media (min-width: 768px) {
-  .tagline {
-    display: block;
-  }
-}
-
-.header-actions {
   display: flex;
   align-items: center;
-  gap: 12px;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
 }
 
-.back-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-family: var(--font-display);
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-  text-decoration: none;
-  padding: 6px 12px;
-  border-radius: 99px;
-  border: 1px solid var(--border-color);
-  transition: color var(--transition-fast), border-color var(--transition-fast), background var(--transition-fast);
-}
-.back-link:hover {
+.floating-theme-toggle:hover {
   color: var(--text-primary);
-  border-color: rgba(255,255,255,0.18);
-  background: var(--bg-tertiary);
+  background-color: rgba(255, 255, 255, 0.1);
+  transform: scale(1.05);
 }
 
 .sun-icon {
@@ -226,48 +162,52 @@ onMounted(() => {
   }
 }
 
-.app-footer {
-  border-top: 1px solid var(--border-color);
-  background-color: var(--bg-secondary);
-  padding: 24px 16px;
-  margin-top: 48px;
-  font-size: 0.85rem;
-  color: var(--text-secondary);
-  transition: background-color var(--transition-normal);
-}
 
-.footer-container {
-  max-width: var(--max-width);
-  margin: 0 auto;
+
+/* Toast Sync Styles */
+.sync-toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(12, 10, 20, 0.9);
+  border: 1px solid rgba(139, 92, 246, 0.4);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 15px rgba(139, 92, 246, 0.2);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 99px;
+  padding: 10px 20px;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 16px;
-  text-align: center;
+  gap: 8px;
+  z-index: 9999;
 }
 
-@media (min-width: 768px) {
-  .footer-container {
-    flex-direction: row;
-    justify-content: space-between;
-    text-align: left;
-  }
+.toast-icon {
+  font-size: 1rem;
 }
 
-.footer-links {
-  list-style: none;
-  display: flex;
-  gap: 20px;
+.toast-text {
+  color: #fff;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.8rem;
+  white-space: nowrap;
 }
 
-.footer-link {
-  color: var(--text-secondary);
-  text-decoration: none;
-  font-weight: 500;
-  transition: color var(--transition-fast);
+/* Toast Transition */
+.toast-fade-enter-active,
+.toast-fade-leave-active {
+  transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.footer-link:hover {
-  color: var(--accent-magenta);
+.toast-fade-enter-from {
+  opacity: 0;
+  transform: translate(-50%, 20px);
+}
+
+.toast-fade-leave-to {
+  opacity: 0;
+  transform: translate(-50%, -20px);
 }
 </style>
