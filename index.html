@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8" />
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Yuphoria — Product Photobooth for Gen Z</title>
   <meta name="description" content="Foto produkmu jadi estetik dalam hitungan menit. Tanpa studio, tanpa fotografer. Coba gratis sekarang." />
@@ -1321,7 +1321,7 @@ a:focus-visible, button:focus-visible {
 <!-- ─── NAV ────────────────────────────────────── -->
 <nav class="nav" aria-label="Navigasi utama">
   <div class="wrap nav-inner">
-    <a href="/" class="nav-logo" aria-label="Yuphoria">
+    <a href="./" class="nav-logo" aria-label="Yuphoria">
       yuphoria<span class="nav-logo-dot" aria-hidden="true"></span>
     </a>
     <ul class="nav-links" role="list">
@@ -1461,7 +1461,7 @@ a:focus-visible, button:focus-visible {
     <div class="try-frame-wrap" id="try-frame">
       <iframe
         class="try-iframe"
-        src="/photobooth.html"
+        src="photobooth.html"
         title="Yuphoria Photobooth interaktif"
         id="try-iframe"
         loading="lazy"
@@ -2002,7 +2002,8 @@ a:focus-visible, button:focus-visible {
         email: email,
         password: password,
         options: {
-          data: { name: name }
+          data: { name: name },
+          emailRedirectTo: window.location.origin
         }
       });
       
