@@ -225,6 +225,7 @@ const frameStyle = computed(() => {
   return style;
 });
 
+const currentCompilationId = ref(0);
 const isCompilingVideo = ref(false);
 const compiledVideoBuffer = ref(null);
 const compiledVideoMimeType = ref('video/mp4');
@@ -500,7 +501,9 @@ const drawThemeAndStickers = (ctx, width, height) => {
   });
 };
 
-const compile4StripVideo = (photos) => {
+
+
+const compile4StripVideo = (photos, compilationId) => {
   return new Promise((resolve) => {
     const validPhotos = photos.filter(p => p.videoBlob);
     if (validPhotos.length < totalPhotosNeeded.value) {
@@ -524,6 +527,11 @@ const compile4StripVideo = (photos) => {
 
     const onVideoLoaded = () => {
       if (hasFailed) return;
+      if (compilationId !== currentCompilationId.value) {
+        cleanup();
+        resolve(null);
+        return;
+      }
       loadedCount++;
       if (loadedCount === totalPhotosNeeded.value) {
         startRecording();
@@ -600,6 +608,11 @@ const compile4StripVideo = (photos) => {
         if (animationFrameId) {
           cancelAnimationFrame(animationFrameId);
         }
+        if (compilationId !== currentCompilationId.value) {
+          cleanup();
+          resolve(null);
+          return;
+        }
         const finalBlob = new Blob(recChunks, { type: mimeType.split(';')[0] });
         cleanup();
         
@@ -617,12 +630,25 @@ const compile4StripVideo = (photos) => {
 
       Promise.all(videos.map(v => v.play()))
         .then(() => {
+          if (compilationId !== currentCompilationId.value) {
+            cleanup();
+            resolve(null);
+            return;
+          }
           recorder.start(100);
           
           const duration = 4000;
           const startTime = Date.now();
 
           const drawFrame = () => {
+            if (compilationId !== currentCompilationId.value) {
+              cleanup();
+              if (recorder.state !== 'inactive') {
+                try { recorder.stop(); } catch (e) {}
+              }
+              return;
+            }
+
             const elapsed = Date.now() - startTime;
             if (elapsed >= duration) {
               if (recorder.state !== 'inactive') {
@@ -740,27 +766,25 @@ const compileMotionPhotoVideo = async () => {
   isCompilingVideo.value = true;
   compiledVideoBuffer.value = null;
   
-  const result = await compile4StripVideo(capturedPhotos.value);
-  if (result) {
+  const compilationId = ++currentCompilationId.value;
+  
+  const result = await compile4StripVideo(capturedPhotos.value, compilationId);
+  if (compilationId === currentCompilationId.value && result) {
     compiledVideoBuffer.value = result.buffer;
     compiledVideoMimeType.value = result.mimeType;
   }
-  isCompilingVideo.value = false;
+  if (compilationId === currentCompilationId.value) {
+    isCompilingVideo.value = false;
+  }
 };
 
-let compileTimeout = null;
-
+// Reset compiled buffer whenever customization changes to ensure fresh re-compilation on next download
 watch([capturedPhotos, settings, stickers], () => {
-  if (capturedPhotos.value.length === totalPhotosNeeded.value) {
-    clearTimeout(compileTimeout);
-    compileTimeout = setTimeout(() => {
-      compileMotionPhotoVideo();
-    }, 800);
-  }
-}, { deep: true, immediate: true });
+  compiledVideoBuffer.value = null;
+}, { deep: true });
 
 onUnmounted(() => {
-  clearTimeout(compileTimeout);
+  currentCompilationId.value++;
   activeVideos.forEach(v => {
     try {
       v.pause();
@@ -941,15 +965,13 @@ const compileAndDownloadStrip = async () => {
 
   triggerPrinterAnimation();
 
-  const jpegDataUrl = exportCanvas.toDataURL('image/jpeg', 0.90);
-  
-  const base64 = jpegDataUrl.split(',')[1];
-  const binaryString = atob(base64);
-  const len = binaryString.length;
-  const jpegBuffer = new Uint8Array(len);
-  for (let i = 0; i < len; i++) {
-    jpegBuffer[i] = binaryString.charCodeAt(i);
+  // Canvas -> Blob -> ArrayBuffer -> Uint8Array (fully async and native)
+  const blob = await new Promise(resolve => exportCanvas.toBlob(resolve, 'image/jpeg', 0.90));
+  if (!blob) {
+    console.error("Failed to export canvas to JPEG blob");
+    return;
   }
+  const jpegBuffer = new Uint8Array(await blob.arrayBuffer());
 
   let finalBuffer;
   if (compiledVideoBuffer.value) {
@@ -963,33 +985,35 @@ const compileAndDownloadStrip = async () => {
     finalBuffer = jpegBuffer;
   }
 
-  let binary = '';
-  const chunkSize = 0xffff;
-  for (let i = 0; i < finalBuffer.length; i += chunkSize) {
-    binary += String.fromCharCode.apply(null, finalBuffer.subarray(i, i + chunkSize));
-  }
-  const dataUrl = 'data:image/jpeg;base64,' + window.btoa(binary);
+  const finalBlob = new Blob([finalBuffer], { type: 'image/jpeg' });
+  const downloadUrl = URL.createObjectURL(finalBlob);
 
   const downloadLink = document.createElement('a');
-  downloadLink.href = dataUrl;
+  downloadLink.href = downloadUrl;
   downloadLink.download = `MVIMG_yuphoria-strip-${Date.now()}.jpg`;
   document.body.appendChild(downloadLink);
   downloadLink.click();
   
   setTimeout(() => {
     document.body.removeChild(downloadLink);
+    URL.revokeObjectURL(downloadUrl);
   }, 100);
 
   announceToScreenReader('Foto strip berhasil diunduh ke perangkat Anda.');
 
-  // If logged in, send strip details to parent landing page to save in user gallery
+  // If logged in, convert finalBlob to base64 asynchronously and send to parent
   if (isLoggedIn.value) {
-    window.parent.postMessage({
-      type: 'yuphoria:save-strip',
-      dataUrl: dataUrl,
-      date: currentDate.value,
-      label: displayLabel.value
-    }, '*');
+    const reader = new FileReader();
+    reader.readAsDataURL(finalBlob);
+    reader.onloadend = () => {
+      const dataUrl = reader.result;
+      window.parent.postMessage({
+        type: 'yuphoria:save-strip',
+        dataUrl: dataUrl,
+        date: currentDate.value,
+        label: displayLabel.value
+      }, '*');
+    };
   }
 
   // Trigger the auth wall / session completed hook in parent window
