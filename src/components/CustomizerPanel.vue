@@ -38,6 +38,7 @@
               class="theme-btn"
               :class="{ active: settings.theme === key, 'theme-locked-btn': isThemeLocked(key) }"
               :style="{ background: t.bg, color: t.color, borderColor: t.borderColor }"
+              :aria-pressed="settings.theme === key ? 'true' : 'false'"
               @click="setTheme(key)"
             >
               {{ t.name }}
@@ -57,13 +58,12 @@
               class="color-option" 
               :for="'color-' + name" 
               :title="name"
-              @click.prevent="setColor(name)"
             >
               <input 
                 type="radio" 
                 :id="'color-' + name" 
                 :value="name" 
-                :checked="settings.frameColor === name"
+                v-model="activeFrameColor"
               >
               <span class="color-circle" :class="{ 'cyberpunk-gradient-bg': colorConf.isGradient }" :style="!colorConf.isGradient ? { backgroundColor: colorConf.bg } : {}" aria-hidden="true"></span>
               <span v-if="isColorLocked(name)" class="premium-lock-color">🔒</span>
@@ -130,6 +130,7 @@
               :key="lay.value"
               class="setup-btn"
               :class="{ active: settings.layout === lay.value }"
+              :aria-pressed="settings.layout === lay.value ? 'true' : 'false'"
               @click="setLayout(lay.value)"
             >
               <span class="setup-icon" v-html="lay.icon"></span>
@@ -146,6 +147,7 @@
               :key="num.value"
               class="segmented-btn"
               :class="{ active: settings.photosPerStrip === num.value }"
+              :aria-pressed="settings.photosPerStrip === num.value ? 'true' : 'false'"
               @click="setPhotosPerStrip(num.value)"
             >
               {{ num.label }}
@@ -161,6 +163,7 @@
               :key="sec.value"
               class="segmented-btn"
               :class="{ active: settings.countdown === sec.value }"
+              :aria-pressed="settings.countdown === sec.value ? 'true' : 'false'"
               @click="setCountdown(sec.value)"
             >
               {{ sec.label }}
@@ -176,6 +179,7 @@
               :key="sp.value"
               class="segmented-btn"
               :class="{ active: settings.spacing === sp.value }"
+              :aria-pressed="settings.spacing === sp.value ? 'true' : 'false'"
               @click="setSpacing(sp.value)"
             >
               {{ sp.label }}
@@ -191,6 +195,7 @@
               :key="bd.value"
               class="segmented-btn"
               :class="{ active: settings.borderSize === bd.value }"
+              :aria-pressed="settings.borderSize === bd.value ? 'true' : 'false'"
               @click="setBorderSize(bd.value)"
             >
               {{ bd.label }}
@@ -217,7 +222,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { usePhotobooth } from '../composables/usePhotobooth';
 
 const { 
@@ -245,6 +250,18 @@ const isThemeLocked = (themeKey) => {
 const isColorLocked = (colorName) => {
   return premiumColors.includes(colorName) && !isLoggedIn.value;
 };
+
+const activeFrameColor = computed({
+  get: () => settings.frameColor,
+  set: (val) => {
+    if (isColorLocked(val)) {
+      showPrompt.value = true;
+      return;
+    }
+    settings.frameColor = val;
+    announceColor();
+  }
+});
 
 const requestAuth = () => {
   window.parent.postMessage({ type: 'yuphoria:open-auth', tab: 'register' }, '*');

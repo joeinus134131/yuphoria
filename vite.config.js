@@ -10,8 +10,10 @@ export default defineConfig({
       input: {
         // landing page is the root — served at /
         main:      resolve(__dirname, 'index.html'),
-        // photobooth Vue app — served at /photobooth.html
-        photobooth: resolve(__dirname, 'photobooth.html'),
+        // photobooth Vue app — served at /photobooth/index.html (slug: /photobooth/)
+        photobooth: resolve(__dirname, 'photobooth/index.html'),
+        // social media feed page — served at /yuphor/index.html (slug: /yuphor/)
+        yuphor:     resolve(__dirname, 'yuphor/index.html'),
       }
     }
   }
