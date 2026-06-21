@@ -1,0 +1,1630 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Yuphor — Express Your Vibe</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap" rel="stylesheet">
+  
+  <style>
+    /* ─── COLOR TOKENS (Gen Z Dark Mode) ──────────────── */
+    :root {
+      --bg: #0C0B0E;
+      --surface: #141318;
+      --surface-2: #1D1B22;
+      --border: rgba(255, 255, 255, 0.08);
+      --border-hover: rgba(255, 255, 255, 0.16);
+      --ink: #F5F2F7;
+      --ink-muted: #9E9AA6;
+      --ink-faint: #625E69;
+      --accent: #B192E6;
+      --accent-gradient: linear-gradient(135deg, #B192E6, #EC4899, #3B82F6);
+      --accent-glow: rgba(177, 146, 230, 0.15);
+      
+      --font-d: 'Plus Jakarta Sans', sans-serif;
+      --font-b: 'DM Sans', sans-serif;
+      
+      --r-sm: 10px;
+      --r-md: 18px;
+      --r-lg: 28px;
+      --r-pill: 999px;
+      
+      --shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+      --ease: cubic-bezier(0.16, 1, 0.3, 1);
+      --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    /* ─── RESET & BASE ───────────────────────────────── */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--ink);
+      font-family: var(--font-b);
+      overflow-y: scroll;
+      line-height: 1.5;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    button {
+      background: none;
+      border: none;
+      color: inherit;
+      cursor: pointer;
+      font: inherit;
+      outline: none;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--bg);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--surface-2);
+      border-radius: var(--r-pill);
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--accent);
+    }
+
+    /* ─── APP HEADER ────────────────────────────────── */
+    .app-header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(12, 11, 14, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .header-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 16px 20px;
+    }
+
+    .btn-back {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 50%;
+      transition: all 0.2s var(--ease);
+    }
+    .btn-back:hover {
+      background: var(--surface-2);
+      border-color: var(--border-hover);
+      transform: translateX(-2px);
+    }
+
+    .app-logo {
+      font-family: var(--font-d);
+      font-weight: 800;
+      font-size: 24px;
+      letter-spacing: -0.5px;
+      background: var(--accent-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .app-logo::after {
+      content: '';
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      background: #EC4899;
+      border-radius: 50%;
+    }
+
+    .user-profile-badge {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--accent-gradient);
+      padding: 2px;
+      cursor: pointer;
+    }
+    .user-profile-badge img {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid var(--surface);
+    }
+
+    /* ─── MAIN CONTAINER ────────────────────────────── */
+    .app-main {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 16px 0 80px 0;
+    }
+
+    /* ─── STORIES BAR ───────────────────────────────── */
+    .stories-bar {
+      display: flex;
+      gap: 16px;
+      overflow-x: auto;
+      padding: 8px 20px 20px 20px;
+      scrollbar-width: none; /* Firefox */
+    }
+    .stories-bar::-webkit-scrollbar {
+      display: none; /* Safari & Chrome */
+    }
+
+    .story-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .story-avatar-wrap {
+      width: 68px;
+      height: 68px;
+      border-radius: 50%;
+      padding: 3px;
+      background: var(--accent-gradient);
+      position: relative;
+      transition: transform 0.3s var(--ease-bounce);
+    }
+    .story-item:hover .story-avatar-wrap {
+      transform: scale(1.05);
+    }
+
+    /* Live pulse animation ring */
+    .story-avatar-wrap::before {
+      content: '';
+      position: absolute;
+      top: -3px;
+      left: -3px;
+      right: -3px;
+      bottom: -3px;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      background: var(--accent-gradient) border-box;
+      mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+      -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: destination-out;
+      mask-composite: exclude;
+      animation: rotateRing 4s linear infinite;
+    }
+
+    .story-avatar-inner {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      border: 3px solid var(--bg);
+      overflow: hidden;
+    }
+    .story-avatar-inner img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .story-badge {
+      position: absolute;
+      bottom: 22px;
+      background: #EC4899;
+      color: #fff;
+      font-size: 9px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: var(--r-pill);
+      border: 1px solid var(--bg);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .story-username {
+      font-size: 11px;
+      color: var(--ink-muted);
+      max-width: 72px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    @keyframes rotateRing {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* ─── FEEDS ─────────────────────────────────────── */
+    .feed-container {
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+      padding: 0 20px;
+    }
+
+    .post-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: 20px;
+      box-shadow: var(--shadow);
+      transition: border-color 0.2s var(--ease);
+    }
+    .post-card:hover {
+      border-color: var(--border-hover);
+    }
+
+    /* User Row */
+    .post-user-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .post-user {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .post-avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    .post-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .post-user-name {
+      font-family: var(--font-d);
+      font-weight: 700;
+      font-size: 14px;
+    }
+    .post-meta {
+      font-size: 11px;
+      color: var(--ink-muted);
+      display: block;
+    }
+    .post-badge {
+      background: rgba(177, 146, 230, 0.12);
+      border: 1px solid rgba(177, 146, 230, 0.25);
+      color: var(--accent);
+      font-size: 10px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: var(--r-pill);
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    /* Post photo strip */
+    .post-photo-strip {
+      background: #111013;
+      padding: 16px 16px 10px 16px;
+      border-radius: var(--r-md);
+      box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      position: relative;
+      margin-bottom: 16px;
+    }
+    .post-strip-frame {
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      border-radius: 4px;
+      overflow: hidden;
+      background: #1c1a21;
+      position: relative;
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+    .post-strip-frame img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      filter: grayscale(10%) contrast(105%) brightness(95%);
+      transition: filter 0.3s var(--ease);
+    }
+    .post-strip-frame:hover img {
+      filter: none;
+    }
+    .post-strip-label {
+      font-family: var(--font-d);
+      text-transform: uppercase;
+      font-size: 10px;
+      letter-spacing: 3px;
+      color: rgba(255, 255, 255, 0.4);
+      text-align: center;
+      margin-top: 4px;
+    }
+
+    /* Music Player Widget */
+    .post-music-player {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      padding: 12px 16px;
+      margin-bottom: 16px;
+      transition: all 0.3s var(--ease);
+    }
+    .post-music-player.playing {
+      border-color: rgba(177, 146, 230, 0.4);
+      box-shadow: 0 4px 20px var(--accent-glow);
+    }
+
+    .disc-container {
+      position: relative;
+      width: 44px;
+      height: 44px;
+      flex-shrink: 0;
+    }
+    .music-vinyl {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: radial-gradient(circle, #000 30%, #222 31%, #000 60%, #333 70%, #111 80%);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+      position: relative;
+      transition: transform 0.3s var(--ease);
+      animation: vinylSpin 3s linear infinite paused;
+    }
+    .music-vinyl::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--accent);
+      transform: translate(-50%, -50%);
+      border: 2px solid #000;
+    }
+    .post-music-player.playing .music-vinyl {
+      animation-play-state: running;
+    }
+
+    .btn-play-pause {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 2;
+      width: 24px;
+      height: 24px;
+      background: rgba(255,255,255,0.9);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #000;
+      transition: all 0.2s var(--ease);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    }
+    .btn-play-pause:hover {
+      transform: translate(-50%, -50%) scale(1.1);
+    }
+    .btn-play-pause svg {
+      width: 12px;
+      height: 12px;
+      fill: currentColor;
+    }
+
+    .music-details {
+      flex-grow: 1;
+      overflow: hidden;
+    }
+    .music-name {
+      font-size: 13px;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .music-artist {
+      font-size: 11px;
+      color: var(--ink-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Sound visualizer waves */
+    .visualizer-waves {
+      display: flex;
+      align-items: flex-end;
+      gap: 3px;
+      height: 24px;
+      width: 48px;
+      margin-left: auto;
+    }
+    .visualizer-bar {
+      width: 3px;
+      height: 4px;
+      background: var(--accent);
+      border-radius: var(--r-pill);
+      transition: height 0.1s var(--ease);
+    }
+    .post-music-player.playing .visualizer-bar {
+      animation: jumpBar 1.2s infinite ease-in-out alternate;
+    }
+    .post-music-player.playing .visualizer-bar:nth-child(1) { animation-delay: 0.1s; }
+    .post-music-player.playing .visualizer-bar:nth-child(2) { animation-delay: 0.4s; }
+    .post-music-player.playing .visualizer-bar:nth-child(3) { animation-delay: 0.2s; }
+    .post-music-player.playing .visualizer-bar:nth-child(4) { animation-delay: 0.6s; }
+    .post-music-player.playing .visualizer-bar:nth-child(5) { animation-delay: 0.3s; }
+
+    @keyframes vinylSpin {
+      100% { transform: rotate(360deg); }
+    }
+    @keyframes jumpBar {
+      0% { height: 4px; }
+      100% { height: 24px; }
+    }
+
+    /* Post caption */
+    .post-caption {
+      font-size: 13px;
+      color: var(--ink);
+      margin-bottom: 16px;
+    }
+    .post-tags {
+      color: var(--accent);
+      font-weight: 700;
+      margin-left: 4px;
+    }
+
+    /* Interaction Bar */
+    .post-actions-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid var(--border);
+      padding-top: 16px;
+      margin-bottom: 16px;
+    }
+
+    .action-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--ink-muted);
+      transition: all 0.2s var(--ease);
+      padding: 6px 10px;
+      border-radius: var(--r-sm);
+    }
+    .action-btn:hover {
+      background: var(--surface-2);
+      color: var(--ink);
+    }
+    .action-btn svg {
+      width: 18px;
+      height: 18px;
+      stroke: currentColor;
+      stroke-width: 2.2;
+      fill: none;
+      transition: all 0.2s var(--ease);
+    }
+    .action-btn.active {
+      color: var(--ink);
+    }
+
+    /* Dynamic interaction color states */
+    .btn-like.active {
+      color: #EF4444;
+    }
+    .btn-like.active svg {
+      fill: #EF4444;
+      stroke: #EF4444;
+      animation: heartPop 0.4s var(--ease-bounce);
+    }
+
+    .btn-repost.active {
+      color: #10B981;
+    }
+    .btn-repost.active svg {
+      transform: rotate(180deg);
+    }
+
+    .btn-save.active {
+      color: #F59E0B;
+    }
+    .btn-save.active svg {
+      fill: #F59E0B;
+      stroke: #F59E0B;
+    }
+
+    @keyframes heartPop {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.4); }
+      100% { transform: scale(1); }
+    }
+
+    /* Comments Collapsible Section */
+    .comments-section {
+      display: none;
+      background: var(--surface-2);
+      border-radius: var(--r-md);
+      padding: 16px;
+      margin-top: 10px;
+      border: 1px solid var(--border);
+    }
+    .comments-section.open {
+      display: block;
+      animation: slideDown 0.3s var(--ease);
+    }
+
+    .comments-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-height: 180px;
+      overflow-y: auto;
+      margin-bottom: 14px;
+      padding-right: 4px;
+    }
+    .comment-item {
+      display: flex;
+      gap: 10px;
+      font-size: 12px;
+    }
+    .comment-avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      overflow: hidden;
+      background: var(--border);
+      flex-shrink: 0;
+    }
+    .comment-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .comment-content {
+      background: var(--surface);
+      border-radius: 12px;
+      padding: 8px 12px;
+      flex-grow: 1;
+    }
+    .comment-user {
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: 2px;
+      display: inline-block;
+      margin-right: 6px;
+    }
+    .comment-text {
+      color: var(--ink-muted);
+    }
+
+    .comment-input-row {
+      display: flex;
+      gap: 10px;
+    }
+    .comment-input-row input {
+      flex-grow: 1;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-sm);
+      color: var(--ink);
+      padding: 10px 14px;
+      font-family: var(--font-b);
+      font-size: 12px;
+      outline: none;
+      transition: border-color 0.2s var(--ease);
+    }
+    .comment-input-row input:focus {
+      border-color: var(--accent);
+    }
+    .btn-send-comment {
+      background: var(--accent-gradient);
+      color: #fff;
+      font-weight: 700;
+      font-size: 12px;
+      padding: 0 16px;
+      border-radius: var(--r-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.2s var(--ease);
+    }
+    .btn-send-comment:hover {
+      opacity: 0.9;
+    }
+
+    @keyframes slideDown {
+      0% { opacity: 0; transform: translateY(-8px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ─── TOAST NOTIFICATION SYSTEM ──────────────────── */
+    .toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      pointer-events: none;
+    }
+    .toast {
+      background: var(--surface-2);
+      border: 1px solid var(--accent);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5), 0 0 15px var(--accent-glow);
+      color: var(--ink);
+      padding: 12px 20px;
+      border-radius: var(--r-sm);
+      font-size: 13px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      opacity: 0;
+      transform: translateY(20px);
+      animation: toastIn 0.3s var(--ease) forwards, toastOut 0.3s 2.7s var(--ease) forwards;
+      pointer-events: auto;
+    }
+    .toast-icon {
+      color: var(--accent);
+    }
+
+    @keyframes toastIn {
+      100% { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes toastOut {
+      100% { opacity: 0; transform: translateY(-20px); }
+    }
+
+    /* ─── FULL STORY VIEWER OVERLAY ─────────────────── */
+    .story-viewer {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: #000;
+      z-index: 9999;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+    .story-viewer.active {
+      display: flex;
+      animation: fadeIn 0.3s var(--ease);
+    }
+
+    .story-container-box {
+      width: 100%;
+      max-width: 480px;
+      height: 100%;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      background: #08080a;
+    }
+
+    /* Progress bars top */
+    .story-progress-container {
+      position: absolute;
+      top: 16px;
+      left: 12px;
+      right: 12px;
+      display: flex;
+      gap: 6px;
+      z-index: 10;
+    }
+    .story-progress-track {
+      flex-grow: 1;
+      height: 3px;
+      background: rgba(255,255,255,0.25);
+      border-radius: var(--r-pill);
+      overflow: hidden;
+    }
+    .story-progress-bar {
+      height: 100%;
+      width: 0;
+      background: #fff;
+      border-radius: var(--r-pill);
+      transition: width 0.1s linear;
+    }
+
+    /* Header info */
+    .story-viewer-header {
+      position: absolute;
+      top: 32px;
+      left: 12px;
+      right: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 10;
+      color: #fff;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.6);
+    }
+    .story-viewer-user {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .story-viewer-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.3);
+      overflow: hidden;
+    }
+    .story-viewer-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .story-viewer-username {
+      font-weight: 700;
+      font-size: 13px;
+    }
+    .story-viewer-close {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: rgba(0,0,0,0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 20px;
+      transition: background 0.2s var(--ease);
+    }
+    .story-viewer-close:hover {
+      background: rgba(0,0,0,0.6);
+    }
+
+    /* Media content */
+    .story-viewer-content {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    .story-viewer-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* Tapping controls left/right */
+    .story-tap-control {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 30%;
+      z-index: 5;
+      cursor: pointer;
+    }
+    .story-tap-left {
+      left: 0;
+    }
+    .story-tap-right {
+      right: 0;
+      width: 70%; /* larger tap area for Next */
+    }
+
+    /* Lofi player control inside story overlay */
+    .story-sound-indicator {
+      position: absolute;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.65);
+      border: 1px solid rgba(255,255,255,0.15);
+      padding: 10px 16px;
+      border-radius: var(--r-pill);
+      font-size: 11px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      z-index: 10;
+      color: rgba(255,255,255,0.9);
+      backdrop-filter: blur(10px);
+    }
+    .story-sound-indicator svg {
+      color: var(--accent);
+      animation: scalePulse 1.2s infinite ease-in-out alternate;
+    }
+
+    @keyframes fadeIn {
+      0% { opacity: 0; }
+      100% { opacity: 1; }
+    }
+    @keyframes scalePulse {
+      0% { transform: scale(0.9); }
+      100% { transform: scale(1.1); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ─── HEADER ─── -->
+  <header class="app-header">
+    <div class="header-inner">
+      <a href="index.html" class="btn-back" aria-label="Kembali ke Landing Page">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>
+      </a>
+      
+      <div class="app-logo">yuphor</div>
+      
+      <div class="user-profile-badge">
+        <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80" alt="Profil Chelsea">
+      </div>
+    </div>
+  </header>
+
+  <!-- ─── MAIN CONTENT ─── -->
+  <main class="app-main">
+    
+    <!-- ─── STORIES BAR ─── -->
+    <section class="stories-bar" id="stories-bar" aria-label="Story Bar"></section>
+
+    <!-- ─── FEEDS ─── -->
+    <section class="feed-container" id="feed-container" aria-label="Feed Media Sosial"></section>
+
+  </main>
+
+  <!-- ─── TOASTS CONTAINER ─── -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- ─── STORY OVERLAY PLAYER ─── -->
+  <div id="story-viewer" class="story-viewer" role="dialog" aria-modal="true">
+    <div class="story-container-box">
+      <!-- Progress Bar Tracker -->
+      <div class="story-progress-container" id="story-progress-container"></div>
+      
+      <!-- Overlay Header -->
+      <div class="story-viewer-header">
+        <div class="story-viewer-user">
+          <div class="story-viewer-avatar">
+            <img src="" id="story-viewer-avatar-img" alt="Avatar">
+          </div>
+          <span class="story-viewer-username" id="story-viewer-username-text">username</span>
+        </div>
+        <button class="story-viewer-close" id="btn-close-story" aria-label="Tutup Story">&times;</button>
+      </div>
+
+      <!-- Tap Controls -->
+      <div class="story-tap-control story-tap-left" id="story-tap-prev"></div>
+      <div class="story-tap-control story-tap-right" id="story-tap-next"></div>
+
+      <!-- Story Media Content -->
+      <div class="story-viewer-content">
+        <img src="" class="story-viewer-img" id="story-viewer-media" alt="Story Media">
+      </div>
+
+      <!-- Sound Track Indicator -->
+      <div class="story-sound-indicator">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 18V5l12-2v13"></path>
+          <circle cx="6" cy="18" r="3"></circle>
+          <circle cx="18" cy="16" r="3"></circle>
+        </svg>
+        <span id="story-music-title">Soundtrack Playing...</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── LOGIC & AUDIO ENGINE ─── -->
+  <script>
+    /* ─── AUDIO SYNTH ENGINE (Web Audio API) ─────────── */
+    class LofiSynth {
+      constructor() {
+        this.ctx = null;
+        this.tempo = 72; // Chill lofi beats
+        this.isPlaying = false;
+        this.sequencerTimer = null;
+        this.chordStep = 0;
+        this.melodyStep = 0;
+        this.masterVolume = null;
+
+        // Sound variables
+        this.chords = [
+          [261.63, 329.63, 392.00, 493.88], // Cmaj7
+          [220.00, 261.63, 329.63, 392.00], // Am7
+          [174.61, 220.00, 261.63, 329.63], // Fmaj7
+          [196.00, 246.94, 293.66, 392.00]  // G7
+        ];
+        this.melodyNotes = [
+          [392.00, 493.88, 587.33, 440.00], // Post 1 melody
+          [329.63, 392.00, 493.88, 523.25], // Post 2 melody
+          [440.00, 523.25, 659.25, 587.33]  // Post 3/Story melody
+        ];
+        this.melodyIndex = 0;
+      }
+
+      initContext() {
+        if (!this.ctx) {
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          this.ctx = new AudioContextClass();
+          
+          this.masterVolume = this.ctx.createGain();
+          this.masterVolume.gain.value = 0.45; // Safe volume
+          
+          // Reverb/Delay Filter
+          this.delayNode = this.ctx.createDelay();
+          this.delayNode.delayTime.value = 0.38;
+          
+          this.delayGain = this.ctx.createGain();
+          this.delayGain.gain.value = 0.25;
+
+          this.lowpass = this.ctx.createBiquadFilter();
+          this.lowpass.type = 'lowpass';
+          this.lowpass.frequency.value = 900; // Muffled lofi filter
+
+          // Route: Oscillator -> Lowpass -> Master Volume -> Output
+          // Delay routing: Lowpass -> DelayNode -> DelayGain -> Master Volume
+          this.lowpass.connect(this.delayNode);
+          this.delayNode.connect(this.delayGain);
+          this.delayGain.connect(this.masterVolume);
+          
+          this.lowpass.connect(this.masterVolume);
+          this.masterVolume.connect(this.ctx.destination);
+
+          // Build continuous crackle background sound (vinyl texture)
+          this.startVinylCrackle();
+        }
+        if (this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+      }
+
+      startVinylCrackle() {
+        // Create noise buffer
+        const bufferSize = this.ctx.sampleRate * 2;
+        const noiseBuffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+        const output = noiseBuffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+          output[i] = Math.random() * 2 - 1;
+        }
+
+        const whiteNoise = this.ctx.createBufferSource();
+        whiteNoise.buffer = noiseBuffer;
+        whiteNoise.loop = true;
+
+        // Muffle it with a bandpass filter to sound like vinyl crackle
+        const noiseFilter = this.ctx.createBiquadFilter();
+        noiseFilter.type = 'bandpass';
+        noiseFilter.frequency.value = 1200;
+        noiseFilter.Q.value = 3;
+
+        const noiseVolume = this.ctx.createGain();
+        noiseVolume.gain.value = 0.03; // Very subtle background crackle
+
+        whiteNoise.connect(noiseFilter);
+        noiseFilter.connect(noiseVolume);
+        noiseVolume.connect(this.masterVolume);
+        whiteNoise.start();
+      }
+
+      playNote(frequency, startTime, duration, type = 'sine', vol = 0.15) {
+        if (!this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        
+        osc.type = type;
+        osc.frequency.setValueAtTime(frequency, startTime);
+        
+        // Pitch drift (lofi tape flutter)
+        const detuneOsc = this.ctx.createOscillator();
+        const detuneGain = this.ctx.createGain();
+        detuneOsc.frequency.value = 4.5; // 4.5Hz wobble
+        detuneGain.gain.value = 8; // detune depth
+        detuneOsc.connect(detuneGain);
+        detuneGain.connect(osc.detune);
+        detuneOsc.start(startTime);
+        
+        // Envelope: smooth fade-in, decay
+        gain.gain.setValueAtTime(0, startTime);
+        gain.gain.linearRampToValueAtTime(vol, startTime + 0.1);
+        gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+        
+        osc.connect(gain);
+        gain.connect(this.lowpass);
+        
+        osc.start(startTime);
+        osc.stop(startTime + duration);
+
+        detuneOsc.stop(startTime + duration);
+      }
+
+      start(melodyIndex = 0) {
+        this.initContext();
+        if (this.isPlaying) this.stop();
+        
+        this.isPlaying = true;
+        this.melodyIndex = melodyIndex;
+        this.chordStep = 0;
+        this.melodyStep = 0;
+        
+        this.runSequencer();
+      }
+
+      runSequencer() {
+        if (!this.isPlaying) return;
+        
+        const stepDuration = 60 / this.tempo; // time of 1 beat (0.83s)
+        const lookAhead = 0.1;
+        const now = this.ctx.currentTime;
+
+        // Schedule Chords (Every 4 beats)
+        if (this.chordStep % 4 === 0) {
+          const chordIndex = (this.chordStep / 4) % this.chords.length;
+          const currentChord = this.chords[chordIndex];
+          currentChord.forEach(freq => {
+            // Play smooth triangle chords
+            this.playNote(freq, now, stepDuration * 3.8, 'triangle', 0.12);
+          });
+        }
+
+        // Schedule Melody note (On specific beats)
+        if (this.chordStep % 2 === 0 || this.chordStep % 3 === 0) {
+          const noteList = this.melodyNotes[this.melodyIndex];
+          const nextNote = noteList[this.melodyStep % noteList.length];
+          // Play high sine bells
+          this.playNote(nextNote, now, stepDuration * 1.5, 'sine', 0.18);
+          this.melodyStep++;
+        }
+
+        this.chordStep++;
+
+        // Schedule next step
+        this.sequencerTimer = setTimeout(() => {
+          this.runSequencer();
+        }, stepDuration * 1000);
+      }
+
+      stop() {
+        this.isPlaying = false;
+        if (this.sequencerTimer) {
+          clearTimeout(this.sequencerTimer);
+          this.sequencerTimer = null;
+        }
+      }
+    }
+
+    const synth = new LofiSynth();
+
+    /* ─── DATA SETUP ────────────────────────────────── */
+    const storiesData = [
+      { id: 1, name: "chelsea.tan", avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80", slides: ["https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=800&q=80", "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=800&q=80"] },
+      { id: 2, name: "arya.w", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=100&q=80", slides: ["https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=800&q=80"] },
+      { id: 3, name: "sarah_u", avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=100&q=80", slides: ["https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?auto=format&fit=crop&w=800&q=80", "https://images.unsplash.com/photo-1513956589380-bad6acb9b9d4?auto=format&fit=crop&w=800&q=80", "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=800&q=80"] },
+    ];
+
+    const feedData = [
+      {
+        id: 1,
+        user: { name: "chelsea.tan", avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80", location: "Dago, Bandung" },
+        time: "2 menit lalu",
+        badge: "Vibes",
+        caption: "Nights like this on a rainy town, accompanied by sweet melody tracks. ✨",
+        tags: ["#lofinight", "#yuphor", "#photostrip"],
+        music: { title: "Sunset Bell Melody", artist: "lofi-synth-1", trackIndex: 0 },
+        frames: [
+          "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=80",
+          "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?auto=format&fit=crop&w=400&q=80",
+          "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=400&q=80"
+        ],
+        likes: 124,
+        reposts: 12,
+        saves: 45,
+        comments: [
+          { user: "arya.w", text: "Frames filter lofi nya estetik bgt kak! 😍" },
+          { user: "sarah_u", text: "Vibes musiknya asik bgt pas dipindai" }
+        ]
+      },
+      {
+        id: 2,
+        user: { name: "arya.w", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=100&q=80", location: "Kuningan, Jakarta" },
+        time: "1 jam lalu",
+        badge: "Vintage",
+        caption: "Self-service booth di cafe favorit. Sangat praktis buat pose random bareng bestie.",
+        tags: ["#cafevibes", "#yuphor", "#vintageframe"],
+        music: { title: "Chill Dream Synth", artist: "lofi-synth-2", trackIndex: 1 },
+        frames: [
+          "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=400&q=80",
+          "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=400&q=80",
+          "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=400&q=80"
+        ],
+        likes: 87,
+        reposts: 5,
+        saves: 18,
+        comments: [
+          { user: "chelsea.tan", text: "Coba filter monokrom deh next time!" }
+        ]
+      },
+      {
+        id: 3,
+        user: { name: "sarah_u", avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=100&q=80", location: "Seminyak, Bali" },
+        time: "3 jam lalu",
+        badge: "Aesthetic",
+        caption: "Sunset session in Bali. Sound on to feel the warmth! 🌊🎶",
+        tags: ["#balivibe", "#sunsetmelody", "#stripstory"],
+        music: { title: "Summer Breeze Chords", artist: "lofi-synth-3", trackIndex: 2 },
+        frames: [
+          "https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?auto=format&fit=crop&w=400&q=80",
+          "https://images.unsplash.com/photo-1513956589380-bad6acb9b9d4?auto=format&fit=crop&w=400&q=80",
+          "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=400&q=80"
+        ],
+        likes: 215,
+        reposts: 34,
+        saves: 98,
+        comments: [
+          { user: "chelsea.tan", text: "Ini frame custom domain cafe ya? Keren bgt" }
+        ]
+      }
+    ];
+
+    /* ─── TOAST CONTROLLER ──────────────────────────── */
+    function showToast(message, icon = "✦") {
+      const container = document.getElementById("toast-container");
+      const toast = document.createElement("div");
+      toast.className = "toast";
+      toast.innerHTML = `<span class="toast-icon">${icon}</span> <span>${message}</span>`;
+      
+      container.appendChild(toast);
+      
+      // Auto-remove after animation completes
+      setTimeout(() => {
+        toast.remove();
+      }, 3000);
+    }
+
+    /* ─── RENDER STORIES BAR ────────────────────────── */
+    function renderStories() {
+      const bar = document.getElementById("stories-bar");
+      bar.innerHTML = "";
+      
+      storiesData.forEach(story => {
+        const item = document.createElement("div");
+        item.className = "story-item";
+        item.onclick = () => openStoryViewer(story);
+        
+        item.innerHTML = `
+          <div class="story-avatar-wrap">
+            <div class="story-avatar-inner">
+              <img src="${story.avatar}" alt="${story.name}">
+            </div>
+          </div>
+          <span class="story-badge">Live</span>
+          <span class="story-username">${story.name}</span>
+        `;
+        bar.appendChild(item);
+      });
+    }
+
+    /* ─── RENDER FEED CARDS ──────────────────────────── */
+    function renderFeed() {
+      const container = document.getElementById("feed-container");
+      container.innerHTML = "";
+      
+      feedData.forEach(post => {
+        const card = document.createElement("article");
+        card.className = "post-card";
+        card.id = `post-${post.id}`;
+        
+        // Build comments HTML
+        let commentsHTML = "";
+        post.comments.forEach(comment => {
+          commentsHTML += `
+            <div class="comment-item">
+              <div class="comment-avatar">
+                <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=50&q=80" alt="Avatar">
+              </div>
+              <div class="comment-content">
+                <span class="comment-user">${comment.user}</span>
+                <span class="comment-text">${comment.text}</span>
+              </div>
+            </div>
+          `;
+        });
+
+        // Photo frames HTML
+        let framesHTML = "";
+        post.frames.forEach(img => {
+          framesHTML += `
+            <div class="post-strip-frame">
+              <img src="${img}" alt="Frame Photo">
+            </div>
+          `;
+        });
+
+        card.innerHTML = `
+          <!-- Profile Header -->
+          <div class="post-user-row">
+            <div class="post-user">
+              <div class="post-avatar">
+                <img src="${post.user.avatar}" alt="${post.user.name}">
+              </div>
+              <div>
+                <span class="post-user-name">${post.user.name}</span>
+                <span class="post-meta">${post.time} · ${post.user.location}</span>
+              </div>
+            </div>
+            <span class="post-badge">✦ ${post.badge}</span>
+          </div>
+
+          <!-- Photo Strip -->
+          <div class="post-photo-strip">
+            ${framesHTML}
+            <div class="post-strip-label">yuphor · lofi nights</div>
+          </div>
+
+          <!-- Music Player -->
+          <div class="post-music-player" id="player-${post.id}">
+            <div class="disc-container">
+              <div class="music-vinyl"></div>
+              <button class="btn-play-pause" onclick="handlePlayClick(${post.id}, ${post.music.trackIndex})" aria-label="Putar Musik">
+                <svg viewBox="0 0 24 24" id="icon-play-${post.id}">
+                  <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                </svg>
+              </button>
+            </div>
+            <div class="music-details">
+              <p class="music-name">${post.music.title}</p>
+              <p class="music-artist">Synthesized by ${post.music.artist}</p>
+            </div>
+            <div class="visualizer-waves">
+              <div class="visualizer-bar"></div>
+              <div class="visualizer-bar"></div>
+              <div class="visualizer-bar"></div>
+              <div class="visualizer-bar"></div>
+              <div class="visualizer-bar"></div>
+            </div>
+          </div>
+
+          <!-- Caption & Tags -->
+          <p class="post-caption">
+            ${post.caption}
+            ${post.tags.map(tag => `<span class="post-tags">${tag}</span>`).join(' ')}
+          </p>
+
+          <!-- Interaction buttons -->
+          <div class="post-actions-bar">
+            <button class="action-btn btn-like" onclick="handleLike(${post.id}, this)">
+              <svg><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+              <span id="like-count-${post.id}">${post.likes}</span>
+            </button>
+            
+            <button class="action-btn" onclick="toggleComments(${post.id})">
+              <svg><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+              <span>${post.comments.length}</span>
+            </button>
+            
+            <button class="action-btn btn-repost" onclick="handleRepost(${post.id}, this)">
+              <svg><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14M7 23 3 19 7 15"></path><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
+              <span id="repost-count-${post.id}">${post.reposts}</span>
+            </button>
+            
+            <button class="action-btn" onclick="handleShare(${post.id})">
+              <svg><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+              <span>Share</span>
+            </button>
+            
+            <button class="action-btn btn-save" onclick="handleSave(${post.id}, this)">
+              <svg><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
+              <span id="save-count-${post.id}">${post.saves}</span>
+            </button>
+          </div>
+
+          <!-- Comments section -->
+          <div class="comments-section" id="comments-box-${post.id}">
+            <div class="comments-list" id="comments-list-${post.id}">
+              ${commentsHTML}
+            </div>
+            <div class="comment-input-row">
+              <input type="text" id="comment-input-${post.id}" placeholder="Tulis komentar..." onkeydown="handleCommentKeydown(event, ${post.id})">
+              <button class="btn-send-comment" onclick="sendComment(${post.id})">Kirim</button>
+            </div>
+          </div>
+        `;
+        
+        container.appendChild(card);
+      });
+    }
+
+    /* ─── MUSIC FEED INTERACTION HANDLERS ────────────── */
+    let currentPlayingPostId = null;
+
+    function handlePlayClick(postId, trackIndex) {
+      const widget = document.getElementById(`player-${postId}`);
+      const btn = document.getElementById(`icon-play-${postId}`);
+      
+      // If clicking play on already playing song: toggle pause
+      if (currentPlayingPostId === postId) {
+        synth.stop();
+        currentPlayingPostId = null;
+        widget.classList.remove("playing");
+        btn.innerHTML = `<polygon points="5 3 19 12 5 21 5 3"></polygon>`;
+        return;
+      }
+
+      // If another song was playing: stop it first
+      if (currentPlayingPostId !== null) {
+        const prevWidget = document.getElementById(`player-${currentPlayingPostId}`);
+        const prevBtn = document.getElementById(`icon-play-${currentPlayingPostId}`);
+        if (prevWidget) prevWidget.classList.remove("playing");
+        if (prevBtn) prevBtn.innerHTML = `<polygon points="5 3 19 12 5 21 5 3"></polygon>`;
+      }
+
+      // Start new synthesis
+      synth.start(trackIndex);
+      currentPlayingPostId = postId;
+      widget.classList.add("playing");
+      btn.innerHTML = `<rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect>`;
+      
+      showToast(`Memutar track lofi: ${feedData.find(p=>p.id===postId).music.title}`, "🎵");
+    }
+
+    /* ─── SOCIAL ACTIONS INTERACTIVITY ───────────────── */
+    function handleLike(postId, btn) {
+      const countEl = document.getElementById(`like-count-${postId}`);
+      let currentVal = parseInt(countEl.innerText);
+      
+      if (btn.classList.toggle("active")) {
+        countEl.innerText = currentVal + 1;
+        showToast("Menyukai postingan ini!", "❤️");
+      } else {
+        countEl.innerText = currentVal - 1;
+      }
+    }
+
+    function toggleComments(postId) {
+      const box = document.getElementById(`comments-box-${postId}`);
+      box.classList.toggle("open");
+    }
+
+    function handleCommentKeydown(event, postId) {
+      if (event.key === "Enter") {
+        sendComment(postId);
+      }
+    }
+
+    function sendComment(postId) {
+      const input = document.getElementById(`comment-input-${postId}`);
+      const text = input.value.trim();
+      if (!text) return;
+      
+      const list = document.getElementById(`comments-list-${postId}`);
+      const commentDiv = document.createElement("div");
+      commentDiv.className = "comment-item";
+      commentDiv.innerHTML = `
+        <div class="comment-avatar">
+          <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=50&q=80" alt="Avatar">
+        </div>
+        <div class="comment-content">
+          <span class="comment-user">chelsea.tan</span>
+          <span class="comment-text">${text}</span>
+        </div>
+      `;
+      list.appendChild(commentDiv);
+      input.value = "";
+      
+      // Scroll to bottom of comments list
+      list.scrollTop = list.scrollHeight;
+      
+      showToast("Komentar ditambahkan!");
+    }
+
+    function handleRepost(postId, btn) {
+      const countEl = document.getElementById(`repost-count-${postId}`);
+      let currentVal = parseInt(countEl.innerText);
+      
+      if (btn.classList.toggle("active")) {
+        countEl.innerText = currentVal + 1;
+        showToast("Postingan di-repost ke feed Anda!", "🔄");
+      } else {
+        countEl.innerText = currentVal - 1;
+      }
+    }
+
+    function handleShare(postId) {
+      const mockLink = `${window.location.origin}${window.location.pathname}#post-${postId}`;
+      
+      // Copy to clipboard
+      navigator.clipboard.writeText(mockLink).then(() => {
+        showToast("Tautan postingan disalin ke clipboard!", "🔗");
+      }).catch(err => {
+        showToast("Gagal menyalin tautan.");
+      });
+    }
+
+    function handleSave(postId, btn) {
+      const countEl = document.getElementById(`save-count-${postId}`);
+      let currentVal = parseInt(countEl.innerText);
+      
+      if (btn.classList.toggle("active")) {
+        countEl.innerText = currentVal + 1;
+        showToast("Postingan disimpan ke bookmark!", "📁");
+      } else {
+        countEl.innerText = currentVal - 1;
+      }
+    }
+
+    /* ─── LIVE STORY OVERLAY SYSTEM ──────────────────── */
+    let storyActiveUser = null;
+    let storyActiveIndex = 0;
+    let storyTimer = null;
+    let storyProgressInterval = null;
+    const storyDuration = 5000; // 5s per story
+
+    function openStoryViewer(storyData) {
+      // Pause any playing feed music
+      if (currentPlayingPostId !== null) {
+        synth.stop();
+        const prevWidget = document.getElementById(`player-${currentPlayingPostId}`);
+        const prevBtn = document.getElementById(`icon-play-${currentPlayingPostId}`);
+        if (prevWidget) prevWidget.classList.remove("playing");
+        if (prevBtn) prevBtn.innerHTML = `<polygon points="5 3 19 12 5 21 5 3"></polygon>`;
+        currentPlayingPostId = null;
+      }
+
+      storyActiveUser = storyData;
+      storyActiveIndex = 0;
+      
+      const viewer = document.getElementById("story-viewer");
+      viewer.classList.add("active");
+      
+      // Setup progress tracks
+      const progContainer = document.getElementById("story-progress-container");
+      progContainer.innerHTML = "";
+      storyData.slides.forEach((slide, idx) => {
+        progContainer.innerHTML += `
+          <div class="story-progress-track">
+            <div class="story-progress-bar" id="story-pb-${idx}"></div>
+          </div>
+        `;
+      });
+
+      // Start story
+      loadStorySlide();
+      
+      // Start background story lofi music
+      synth.start(2); // Play track 2 lofi beat
+      document.getElementById("story-music-title").innerText = "Lofi Story Ambient";
+    }
+
+    function loadStorySlide() {
+      // Clear timers
+      clearTimeout(storyTimer);
+      clearInterval(storyProgressInterval);
+      
+      // Reset all progress bars
+      const totalSlides = storyActiveUser.slides.length;
+      for (let i = 0; i < totalSlides; i++) {
+        const pb = document.getElementById(`story-pb-${i}`);
+        if (i < storyActiveIndex) {
+          pb.style.width = "100%";
+        } else {
+          pb.style.width = "0%";
+        }
+      }
+
+      // Load avatar & username & image
+      document.getElementById("story-viewer-avatar-img").src = storyActiveUser.avatar;
+      document.getElementById("story-viewer-username-text").innerText = storyActiveUser.name;
+      document.getElementById("story-viewer-media").src = storyActiveUser.slides[storyActiveIndex];
+
+      // Run progress bar animation
+      const activeBar = document.getElementById(`story-pb-${storyActiveIndex}`);
+      let elapsed = 0;
+      const intervalMs = 100;
+      
+      storyProgressInterval = setInterval(() => {
+        elapsed += intervalMs;
+        const pct = Math.min((elapsed / storyDuration) * 100, 100);
+        activeBar.style.width = `${pct}%`;
+      }, intervalMs);
+
+      // Schedule next slide
+      storyTimer = setTimeout(() => {
+        navigateStory(1); // Auto Go Next
+      }, storyDuration);
+    }
+
+    function navigateStory(direction) {
+      storyActiveIndex += direction;
+      
+      if (storyActiveIndex >= storyActiveUser.slides.length) {
+        // Deck complete, check next user story or close
+        const currentUserIndex = storiesData.findIndex(u => u.id === storyActiveUser.id);
+        if (currentUserIndex < storiesData.length - 1) {
+          // Open next user's story
+          openStoryViewer(storiesData[currentUserIndex + 1]);
+        } else {
+          closeStoryViewer();
+        }
+      } else if (storyActiveIndex < 0) {
+        // Go back to previous user story or restart deck
+        const currentUserIndex = storiesData.findIndex(u => u.id === storyActiveUser.id);
+        if (currentUserIndex > 0) {
+          const prevUser = storiesData[currentUserIndex - 1];
+          openStoryViewer(prevUser);
+          // Set to last slide of previous user deck
+          storyActiveIndex = prevUser.slides.length - 1;
+          loadStorySlide();
+        } else {
+          // Restart first deck
+          storyActiveIndex = 0;
+          loadStorySlide();
+        }
+      } else {
+        loadStorySlide();
+      }
+    }
+
+    function closeStoryViewer() {
+      // Clear timers
+      clearTimeout(storyTimer);
+      clearInterval(storyProgressInterval);
+      
+      synth.stop(); // Stop story music
+      
+      const viewer = document.getElementById("story-viewer");
+      viewer.classList.remove("active");
+      storyActiveUser = null;
+    }
+
+    // Story click handlers
+    document.getElementById("btn-close-story").onclick = closeStoryViewer;
+    document.getElementById("story-tap-prev").onclick = () => navigateStory(-1);
+    document.getElementById("story-tap-next").onclick = () => navigateStory(1);
+
+    /* ─── INITIALIZATION ────────────────────────────── */
+    window.addEventListener("DOMContentLoaded", () => {
+      renderStories();
+      renderFeed();
+      
+      // Keyboard listeners to close story overlay
+      window.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+          closeStoryViewer();
+        }
+      });
+    });
+  </script>
+</body>
+</html>

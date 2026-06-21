@@ -1,6 +1,24 @@
 {
   "version": 1,
   "skills": {
+    "brand-naming-strategies": {
+      "source": "mike-coulbourn/claude-vibes",
+      "sourceType": "github",
+      "skillPath": "plugins/vibes/skills/brand-naming-strategies/SKILL.md",
+      "computedHash": "78ef1edfc180f32abe0626ed58b486df7f727ed0b922ee44b1328b1dfe9ec1cc"
+    },
+    "front-end-developer": {
+      "source": "mindrally/skills",
+      "sourceType": "github",
+      "skillPath": "front-end-developer/SKILL.md",
+      "computedHash": "c33c2e51eac1a90e094407dfd61457ec7c3ba3fa9587e7389b747ea90c7bb0eb"
+    },
+    "frontend-design": {
+      "source": "anthropics/skills",
+      "sourceType": "github",
+      "skillPath": "skills/frontend-design/SKILL.md",
+      "computedHash": "4eabc66183767153e404b39d1b839b1c37f2d82d86f0a0d7e880a579d8d62336"
+    },
     "frontend-developer": {
       "source": "rmyndharis/antigravity-skills",
       "sourceType": "github",
@@ -12,6 +30,12 @@
       "sourceType": "github",
       "skillPath": "plugins/frontend/skills/landing-page/SKILL.md",
       "computedHash": "b449315b1b11d92b876c03fc8d0c5fd134f7a7f1c40592a13034951ee1eb15f8"
+    },
+    "vercel-react-best-practices": {
+      "source": "vercel-labs/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/react-best-practices/SKILL.md",
+      "computedHash": "ca7b0c0c6e5f2750043f7f0cd72d16ac4e2abc48f9b5500d047a4b77a2506212"
     },
     "web-design-reviewer": {
       "source": "github/awesome-copilot",
