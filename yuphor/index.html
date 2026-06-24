@@ -9,6 +9,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap" rel="stylesheet">
   
+  <!-- Supabase CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
   <style>
     /* ─── COLOR TOKENS (Gen Z Dark Mode) ──────────────── */
     :root {
@@ -874,6 +877,448 @@
       0% { transform: scale(0.9); }
       100% { transform: scale(1.1); }
     }
+
+    /* ─── AUTHENTICATION & DROPDOWN STYLES ────────────── */
+    .auth-header-container {
+      display: flex;
+      align-items: center;
+      position: relative;
+    }
+    
+    .btn-login-header {
+      background: var(--accent-gradient);
+      color: #0c0b0e;
+      font-weight: 700;
+      font-size: 13px;
+      padding: 8px 16px;
+      border-radius: var(--r-pill);
+      box-shadow: 0 4px 15px rgba(177, 146, 230, 0.3);
+      transition: all 0.2s var(--ease);
+      font-family: var(--font-d);
+    }
+    
+    .btn-login-header:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(177, 146, 230, 0.45);
+    }
+    
+    .avatar-dropdown-trigger {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--accent-gradient);
+      padding: 2px;
+      cursor: pointer;
+      transition: transform 0.2s var(--ease);
+    }
+    
+    .avatar-dropdown-trigger:hover {
+      transform: scale(1.05);
+    }
+    
+    .avatar-dropdown-trigger img {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid var(--bg);
+    }
+    
+    .user-dropdown-menu {
+      position: absolute;
+      top: 50px;
+      right: 0;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--r-sm);
+      width: 200px;
+      padding: 12px;
+      box-shadow: var(--shadow);
+      z-index: 1000;
+      display: none;
+      flex-direction: column;
+      gap: 8px;
+      animation: dropdownFade 0.2s var(--ease);
+    }
+    
+    .user-dropdown-menu.active {
+      display: flex;
+    }
+    
+    @keyframes dropdownFade {
+      from { opacity: 0; transform: translateY(-8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .user-dropdown-header {
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+      max-width: 100%;
+      overflow: hidden;
+    }
+    
+    .user-dropdown-name {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--ink);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .user-dropdown-email {
+      font-size: 11px;
+      color: var(--ink-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .btn-dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--ink);
+      padding: 8px;
+      border-radius: 6px;
+      width: 100%;
+      text-align: left;
+      transition: background 0.2s ease;
+    }
+    
+    .btn-dropdown-item:hover {
+      background: rgba(255, 255, 255, 0.05);
+    }
+    
+    .btn-dropdown-logout {
+      color: #EF4444;
+    }
+    
+    .btn-dropdown-logout:hover {
+      background: rgba(239, 68, 68, 0.1);
+    }
+    
+    /* Modals overlays & Auth cards */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+    
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: all;
+    }
+    
+    .auth-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      width: 90%;
+      max-width: 380px;
+      padding: 28px 24px;
+      box-shadow: var(--shadow);
+      transform: translateY(20px);
+      transition: transform 0.3s var(--ease-bounce);
+      position: relative;
+    }
+    
+    .modal-overlay.active .auth-card {
+      transform: translateY(0);
+    }
+    
+    .auth-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: transparent;
+      border: none;
+      font-size: 1.5rem;
+      color: var(--ink-muted);
+      cursor: pointer;
+      line-height: 1;
+    }
+    
+    .auth-close:hover { color: var(--ink); }
+    
+    .auth-tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 20px;
+    }
+    
+    .auth-tab {
+      flex: 1;
+      background: transparent;
+      border: none;
+      font-family: var(--font-d);
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--ink-muted);
+      padding-bottom: 10px;
+      cursor: pointer;
+      text-align: center;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      transition: all 0.2s ease;
+    }
+    
+    .auth-tab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+    
+    .auth-form {
+      display: none;
+      flex-direction: column;
+      gap: 14px;
+    }
+    
+    .auth-form.active {
+      display: flex;
+    }
+    
+    .form-field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    
+    .form-field label {
+      font-family: var(--font-d);
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--ink-muted);
+    }
+    
+    .form-field input {
+      font-family: var(--font-b);
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--r-sm);
+      padding: 10px 12px;
+      color: var(--ink);
+      font-size: 14px;
+      transition: all 0.2s ease;
+    }
+    
+    .form-field input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+    
+    .btn-auth-submit {
+      font-family: var(--font-d);
+      font-weight: 700;
+      font-size: 14px;
+      color: #0c0b0e;
+      background: var(--ink);
+      border: none;
+      border-radius: var(--r-pill);
+      padding: 12px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    
+    .btn-auth-submit:hover {
+      background: #FFFFFF;
+      transform: translateY(-1px);
+    }
+    
+    .btn-auth-submit:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    
+    .auth-divider {
+      display: flex;
+      align-items: center;
+      text-align: center;
+      color: var(--ink-faint);
+      font-size: 11px;
+      margin: 12px 0;
+    }
+    
+    .auth-divider::before, .auth-divider::after {
+      content: '';
+      flex: 1;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .auth-divider:not(:empty)::before { margin-right: .5em; }
+    .auth-divider:not(:empty)::after { margin-left: .5em; }
+    
+    .btn-google-login {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      background: #FFFFFF;
+      color: #1F1F1F;
+      border: 1px solid #DADCE0;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      border-radius: var(--r-pill);
+      padding: 12px;
+      transition: all 0.2s ease;
+      width: 100%;
+    }
+    
+    .btn-google-login:hover {
+      background: #F8F9FA;
+      border-color: #C3C6CB;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Simulated Account Chooser Window */
+    .google-sim-card {
+      background: #FFFFFF;
+      color: #1F1F1F;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 360px;
+      padding: 24px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      border: 1px solid #DADCE0;
+      position: relative;
+    }
+    
+    .google-sim-logo {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 16px;
+    }
+    
+    .google-sim-title {
+      font-size: 18px;
+      font-weight: 700;
+      text-align: center;
+      color: #202124;
+      margin-bottom: 4px;
+    }
+    
+    .google-sim-subtitle {
+      font-size: 13px;
+      color: #5F6368;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    
+    .google-sim-list {
+      display: flex;
+      flex-direction: column;
+      border-top: 1px solid #E8EAED;
+      border-bottom: 1px solid #E8EAED;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    
+    .google-sim-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 8px;
+      cursor: pointer;
+      transition: background 0.15s ease;
+      border-radius: 6px;
+      text-align: left;
+    }
+    
+    .google-sim-item:hover {
+      background: #F1F3F4;
+    }
+    
+    .google-sim-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+    }
+    
+    .google-sim-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .google-sim-name {
+      font-size: 13px;
+      font-weight: 700;
+      color: #3C4043;
+    }
+    
+    .google-sim-email {
+      font-size: 11px;
+      color: #5F6368;
+    }
+    
+    .google-sim-custom-section {
+      margin-top: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    
+    .google-sim-custom-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: #5F6368;
+      text-align: left;
+    }
+    
+    .google-sim-input-row {
+      display: flex;
+      gap: 8px;
+    }
+    
+    .google-sim-input {
+      flex: 1;
+      border: 1px solid #DADCE0;
+      border-radius: 4px;
+      padding: 8px 12px;
+      font-size: 13px;
+      color: #202124;
+      background: #FFF;
+    }
+    
+    .google-sim-input:focus {
+      outline: none;
+      border-color: #1A73E8;
+    }
+    
+    .btn-google-sim-submit {
+      background: #1A73E8;
+      color: #FFFFFF;
+      font-weight: 700;
+      font-size: 13px;
+      padding: 8px 14px;
+      border-radius: 4px;
+      transition: background 0.15s ease;
+    }
+    
+    .btn-google-sim-submit:hover {
+      background: #1557B0;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
   </style>
 </head>
 <body>
@@ -889,8 +1334,8 @@
       
       <div class="app-logo">yuphor</div>
       
-      <div class="user-profile-badge">
-        <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80" alt="Profil Chelsea">
+      <div id="auth-header-container" class="auth-header-container">
+        <!-- Will be populated dynamically by JavaScript -->
       </div>
     </div>
   </header>
@@ -1330,27 +1775,27 @@
           <!-- Interaction buttons -->
           <div class="post-actions-bar">
             <button class="action-btn btn-like" onclick="handleLike(${post.id}, this)">
-              <svg><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+              <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
               <span id="like-count-${post.id}">${post.likes}</span>
             </button>
             
             <button class="action-btn" onclick="toggleComments(${post.id})">
-              <svg><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+              <svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
               <span>${post.comments.length}</span>
             </button>
             
             <button class="action-btn btn-repost" onclick="handleRepost(${post.id}, this)">
-              <svg><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14M7 23 3 19 7 15"></path><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
+              <svg viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14M7 23 3 19 7 15"></path><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
               <span id="repost-count-${post.id}">${post.reposts}</span>
             </button>
             
             <button class="action-btn" onclick="handleShare(${post.id})">
-              <svg><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+              <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
               <span>Share</span>
             </button>
             
             <button class="action-btn btn-save" onclick="handleSave(${post.id}, this)">
-              <svg><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
+              <svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
               <span id="save-count-${post.id}">${post.saves}</span>
             </button>
           </div>
@@ -1402,7 +1847,17 @@
     }
 
     /* ─── SOCIAL ACTIONS INTERACTIVITY ───────────────── */
+    function requireAuth(actionName) {
+      if (!currentUser) {
+        showToast(`Silakan login terlebih dahulu untuk ${actionName}`, "🔒");
+        openAuthModal('login');
+        return false;
+      }
+      return true;
+    }
+
     function handleLike(postId, btn) {
+      if (!requireAuth("menyukai postingan")) return;
       const countEl = document.getElementById(`like-count-${postId}`);
       let currentVal = parseInt(countEl.innerText);
       
@@ -1415,6 +1870,7 @@
     }
 
     function toggleComments(postId) {
+      if (!requireAuth("melihat dan menulis komentar")) return;
       const box = document.getElementById(`comments-box-${postId}`);
       box.classList.toggle("open");
     }
@@ -1426,6 +1882,7 @@
     }
 
     function sendComment(postId) {
+      if (!requireAuth("mengirim komentar")) return;
       const input = document.getElementById(`comment-input-${postId}`);
       const text = input.value.trim();
       if (!text) return;
@@ -1435,10 +1892,10 @@
       commentDiv.className = "comment-item";
       commentDiv.innerHTML = `
         <div class="comment-avatar">
-          <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=50&q=80" alt="Avatar">
+          ${currentUser.avatarUrl ? `<img src="${currentUser.avatarUrl}" alt="Avatar">` : `<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:var(--surface-2); font-weight:bold; font-size:12px; color:var(--accent); border-radius:50%; border:1.5px solid var(--surface);">${currentUser.name.charAt(0).toUpperCase()}</div>`}
         </div>
         <div class="comment-content">
-          <span class="comment-user">chelsea.tan</span>
+          <span class="comment-user">${escapeHTML(currentUser.name)}</span>
           <span class="comment-text">${escapeHTML(text)}</span>
         </div>
       `;
@@ -1450,6 +1907,7 @@
     }
 
     function handleRepost(postId, btn) {
+      if (!requireAuth("me-repost postingan")) return;
       const countEl = document.getElementById(`repost-count-${postId}`);
       let currentVal = parseInt(countEl.innerText);
       
@@ -1472,6 +1930,7 @@
     }
 
     function handleSave(postId, btn) {
+      if (!requireAuth("menyimpan postingan")) return;
       const countEl = document.getElementById(`save-count-${postId}`);
       let currentVal = parseInt(countEl.innerText);
       
@@ -1596,17 +2055,524 @@
     document.getElementById("story-tap-prev").onclick = () => navigateStory(-1);
     document.getElementById("story-tap-next").onclick = () => navigateStory(1);
 
+    /* ─── SUPABASE & SIMULATED AUTH LOGIC ─────────────── */
+    let SUPABASE_URL = "%VITE_SUPABASE_URL%";
+    let SUPABASE_ANON_KEY = "%VITE_SUPABASE_ANON_KEY%";
+    let SUPABASE_PUB_KEY = "%VITE_SUPABASE_PUBLISHABLE_KEY%";
+
+    const isPlaceholder = (val) => !val || val.startsWith('%') || val.includes('your-project-id') || val.includes('...');
+
+    let activeUrl = isPlaceholder(SUPABASE_URL) ? '' : SUPABASE_URL;
+    let activeKey = isPlaceholder(SUPABASE_ANON_KEY) ? '' : SUPABASE_ANON_KEY;
+    if (!activeKey && !isPlaceholder(SUPABASE_PUB_KEY)) {
+      activeKey = SUPABASE_PUB_KEY;
+    }
+
+    if (!activeUrl || !activeKey) {
+      activeUrl = localStorage.getItem('yuphoria-supabase-url') || activeUrl;
+      activeKey = localStorage.getItem('yuphoria-supabase-anon-key') || activeKey;
+    }
+
+    let supabaseClient = null;
+    if (activeUrl && activeKey && !isPlaceholder(activeUrl) && !isPlaceholder(activeKey)) {
+      try {
+        supabaseClient = supabase.createClient(activeUrl, activeKey);
+        console.log("Supabase Client initialized successfully in Yuphor!");
+      } catch (e) {
+        console.error("Failed to initialize Supabase in Yuphor:", e);
+      }
+    }
+
+    let currentUser = null;
+
+    function isSupabaseActive() {
+      return supabaseClient !== null;
+    }
+
+    function getUsersStore() {
+      return JSON.parse(localStorage.getItem('yuphoria-users') || '{}');
+    }
+
+    function saveUsersStore(store) {
+      localStorage.setItem('yuphoria-users', JSON.stringify(store));
+    }
+
+    function getCurrentUser() {
+      return currentUser;
+    }
+
+    async function checkAuthState() {
+      if (isSupabaseActive()) {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (session && session.user) {
+          const { data: profile } = await supabaseClient
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+          
+          const userMeta = session.user.user_metadata || {};
+          
+          currentUser = {
+            id: session.user.id,
+            name: profile ? profile.name : (userMeta.full_name || userMeta.name || 'User'),
+            email: session.user.email,
+            avatarUrl: userMeta.avatar_url || null,
+            defaultLabel: profile ? profile.default_label : 'yuphor'
+          };
+        } else {
+          currentUser = null;
+        }
+      } else {
+        const sessionEmail = localStorage.getItem('yuphoria-session');
+        if (sessionEmail) {
+          const users = getUsersStore();
+          const user = users[sessionEmail];
+          if (user) {
+            currentUser = user;
+          } else {
+            localStorage.removeItem('yuphoria-session');
+            currentUser = null;
+          }
+        } else {
+          currentUser = null;
+        }
+      }
+      updateHeaderUI();
+    }
+
+    if (isSupabaseActive()) {
+      supabaseClient.auth.onAuthStateChange(async (event, session) => {
+        await checkAuthState();
+      });
+    }
+
+    function updateHeaderUI() {
+      const container = document.getElementById('auth-header-container');
+      if (!container) return;
+      
+      const user = getCurrentUser();
+      if (user) {
+        let avatarHtml = '';
+        if (user.avatarUrl) {
+          avatarHtml = `<img src="${user.avatarUrl}" alt="${escapeHTML(user.name)}" class="avatar-img" style="width:100%; height:100%; border-radius:50%; object-fit:cover; border:2px solid var(--surface);">`;
+        } else {
+          const letter = user.name.charAt(0).toUpperCase();
+          avatarHtml = `<div class="story-avatar-inner" style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:var(--surface-2); font-weight:bold; font-size:15px; color:var(--accent); border-radius:50%; border:2px solid var(--surface);">${letter}</div>`;
+        }
+        
+        container.innerHTML = `
+          <div class="avatar-dropdown-trigger" onclick="toggleUserDropdown(event)">
+            ${avatarHtml}
+          </div>
+          <div class="user-dropdown-menu" id="user-dropdown-menu">
+            <div class="user-dropdown-header">
+              <p class="user-dropdown-name">${escapeHTML(user.name)}</p>
+              <p class="user-dropdown-email">${escapeHTML(user.email)}</p>
+            </div>
+            <button class="btn-dropdown-item btn-dropdown-logout" onclick="handleLogout()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                <polyline points="16 17 21 12 16 7"></polyline>
+                <line x1="21" y1="12" x2="9" y2="12"></line>
+              </svg>
+              Keluar
+            </button>
+          </div>
+        `;
+      } else {
+        container.innerHTML = `
+          <button class="btn-login-header" onclick="openAuthModal('login')">Masuk</button>
+        `;
+      }
+    }
+
+    function toggleUserDropdown(event) {
+      if (event) event.stopPropagation();
+      const menu = document.getElementById('user-dropdown-menu');
+      if (menu) {
+        menu.classList.toggle('active');
+      }
+    }
+
+    window.addEventListener('click', () => {
+      const menu = document.getElementById('user-dropdown-menu');
+      if (menu) {
+        menu.classList.remove('active');
+      }
+    });
+
+    function openAuthModal(tab = 'login') {
+      const modal = document.getElementById('auth-modal');
+      if (!modal) return;
+      modal.classList.add('active');
+      modal.removeAttribute('aria-hidden');
+      switchAuthTab(tab);
+    }
+
+    function closeAuthModal() {
+      const modal = document.getElementById('auth-modal');
+      if (!modal) return;
+      modal.classList.remove('active');
+      modal.setAttribute('aria-hidden', 'true');
+      document.getElementById('form-login').reset();
+      document.getElementById('form-register').reset();
+    }
+
+    function switchAuthTab(tab) {
+      const tabLogin = document.getElementById('tab-login');
+      const tabRegister = document.getElementById('tab-register');
+      const formLogin = document.getElementById('form-login');
+      const formRegister = document.getElementById('form-register');
+
+      if (tab === 'login') {
+        tabLogin.classList.add('active');
+        tabLogin.setAttribute('aria-selected', 'true');
+        tabRegister.classList.remove('active');
+        tabRegister.setAttribute('aria-selected', 'false');
+        formLogin.classList.add('active');
+        formRegister.classList.remove('active');
+      } else {
+        tabRegister.classList.add('active');
+        tabRegister.setAttribute('aria-selected', 'true');
+        tabLogin.classList.remove('active');
+        tabLogin.setAttribute('aria-selected', 'false');
+        formRegister.classList.add('active');
+        formLogin.classList.remove('active');
+      }
+    }
+
+    async function submitLogin(e) {
+      e.preventDefault();
+      const email = document.getElementById('login-email').value.trim().toLowerCase();
+      const password = document.getElementById('login-password').value;
+      const submitBtn = document.getElementById('btn-login-submit');
+
+      submitBtn.innerHTML = '<span style="border: 2px solid #000; border-top: 2px solid transparent; border-radius: 50%; width: 14px; height: 14px; display: inline-block; animation: spin 1s linear infinite; margin-right: 8px;"></span>';
+      submitBtn.disabled = true;
+
+      if (isSupabaseActive()) {
+        const { data, error } = await supabaseClient.auth.signInWithPassword({
+          email: email,
+          password: password
+        });
+        
+        if (error) {
+          showToast(error.message, '❌');
+          submitBtn.innerHTML = '<span>Masuk</span>';
+          submitBtn.disabled = false;
+          return;
+        }
+        
+        closeAuthModal();
+        submitBtn.innerHTML = '<span>Masuk</span>';
+        submitBtn.disabled = false;
+      } else {
+        const users = getUsersStore();
+        const user = users[email];
+
+        if (!user || user.password !== password) {
+          showToast('Email atau password salah.', '❌');
+          submitBtn.innerHTML = '<span>Masuk</span>';
+          submitBtn.disabled = false;
+          return;
+        }
+
+        setTimeout(() => {
+          localStorage.setItem('yuphoria-session', email);
+          closeAuthModal();
+          checkAuthState();
+          showToast(`Selamat datang kembali, ${user.name}!`, '👋');
+          submitBtn.innerHTML = '<span>Masuk</span>';
+          submitBtn.disabled = false;
+        }, 800);
+      }
+    }
+
+    async function submitRegister(e) {
+      e.preventDefault();
+      const name = document.getElementById('register-name').value.trim();
+      const email = document.getElementById('register-email').value.trim().toLowerCase();
+      const password = document.getElementById('register-password').value;
+      const confirm = document.getElementById('register-confirm').value;
+      const submitBtn = document.getElementById('btn-register-submit');
+
+      if (password !== confirm) {
+        showToast('Konfirmasi password tidak cocok.', '❌');
+        return;
+      }
+
+      submitBtn.innerHTML = '<span style="border: 2px solid #000; border-top: 2px solid transparent; border-radius: 50%; width: 14px; height: 14px; display: inline-block; animation: spin 1s linear infinite; margin-right: 8px;"></span>';
+      submitBtn.disabled = true;
+
+      if (isSupabaseActive()) {
+        const { data, error } = await supabaseClient.auth.signUp({
+          email: email,
+          password: password,
+          options: {
+            data: { name: name },
+            emailRedirectTo: window.location.origin + '/yuphor/'
+          }
+        });
+        
+        if (error) {
+          showToast(error.message, '❌');
+          submitBtn.innerHTML = '<span>Daftar Akun</span>';
+          submitBtn.disabled = false;
+          return;
+        }
+
+        if (data.user) {
+          await supabaseClient.from('profiles').upsert({
+            id: data.user.id,
+            name: name,
+            default_label: 'yuphor'
+          });
+        }
+        
+        closeAuthModal();
+        showToast('Registrasi sukses! Silakan cek email Anda untuk konfirmasi.', '✉️');
+        submitBtn.innerHTML = '<span>Daftar Akun</span>';
+        submitBtn.disabled = false;
+      } else {
+        const users = getUsersStore();
+        if (users[email]) {
+          showToast('Email sudah terdaftar.', '❌');
+          submitBtn.innerHTML = '<span>Daftar Akun</span>';
+          submitBtn.disabled = false;
+          return;
+        }
+
+        setTimeout(() => {
+          users[email] = {
+            id: 'user-' + Date.now(),
+            name,
+            email,
+            password,
+            defaultLabel: 'yuphor'
+          };
+          saveUsersStore(users);
+          localStorage.setItem('yuphoria-session', email);
+
+          closeAuthModal();
+          checkAuthState();
+          showToast(`Registrasi sukses! Selamat datang, ${name}.`, '✨');
+          submitBtn.innerHTML = '<span>Daftar Akun</span>';
+          submitBtn.disabled = false;
+        }, 800);
+      }
+    }
+
+    async function handleLogout() {
+      if (isSupabaseActive()) {
+        await supabaseClient.auth.signOut();
+        showToast('Anda berhasil keluar.', '👋');
+      } else {
+        localStorage.removeItem('yuphoria-session');
+        checkAuthState();
+        showToast('Anda berhasil keluar.', '👋');
+      }
+    }
+
+    async function handleGoogleLogin() {
+      if (isSupabaseActive()) {
+        const { data, error } = await supabaseClient.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo: window.location.href
+          }
+        });
+        if (error) {
+          showToast(error.message, '❌');
+        }
+      } else {
+        openGoogleSim();
+      }
+    }
+
+    // Google Sign-In Simulation
+    const googleAccounts = [
+      { name: 'Chelsea Tan', email: 'chelsea.tan@gmail.com', avatar: 'C', img: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80' },
+      { name: 'Arya Wijaya', email: 'arya.w@gmail.com', avatar: 'A', img: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=100&q=80' },
+      { name: 'Sarah Utami', email: 'sarah_u@gmail.com', avatar: 'S', img: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=100&q=80' }
+    ];
+
+    function openGoogleSim() {
+      const modal = document.getElementById('google-sim-modal');
+      if (!modal) return;
+      closeAuthModal();
+      modal.classList.add('active');
+      
+      const listEl = document.getElementById('google-sim-list');
+      listEl.innerHTML = googleAccounts.map(acc => `
+        <div class="google-sim-item" onclick="selectGoogleAccount('${acc.email}', '${acc.name}', '${acc.img}')">
+          <img src="${acc.img}" class="google-sim-avatar" style="object-fit:cover;" alt="${escapeHTML(acc.name)}">
+          <div class="google-sim-info">
+            <span class="google-sim-name">${escapeHTML(acc.name)}</span>
+            <span class="google-sim-email">${escapeHTML(acc.email)}</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function closeGoogleSim() {
+      const modal = document.getElementById('google-sim-modal');
+      if (modal) modal.classList.remove('active');
+    }
+
+    function selectGoogleAccount(email, name, avatarUrl) {
+      const mockUser = {
+        id: 'google-sim-' + Date.now(),
+        name: name,
+        email: email,
+        avatarUrl: avatarUrl,
+        defaultLabel: 'yuphor'
+      };
+      
+      const users = getUsersStore();
+      users[email] = mockUser;
+      saveUsersStore(users);
+      
+      localStorage.setItem('yuphoria-session', email);
+      closeGoogleSim();
+      checkAuthState();
+      showToast(`Masuk sebagai ${name} (${email})`, '👋');
+    }
+
+    function submitGoogleSimCustom() {
+      const inputEl = document.getElementById('google-sim-email-input');
+      const email = inputEl.value.trim().toLowerCase();
+      if (!email || !email.includes('@')) {
+        alert('Masukkan email Gmail yang valid.');
+        return;
+      }
+      
+      const namePart = email.split('@')[0];
+      const name = namePart.split('.').map(p => p.charAt(0).toUpperCase() + p.slice(1)).join(' ');
+      
+      selectGoogleAccount(email, name, null);
+      inputEl.value = '';
+    }
+
     /* ─── INITIALIZATION ────────────────────────────── */
     window.addEventListener("DOMContentLoaded", () => {
       renderStories();
       renderFeed();
+      checkAuthState();
       
       window.addEventListener("keydown", (e) => {
         if (e.key === "Escape") {
           closeStoryViewer();
+          closeAuthModal();
+          closeGoogleSim();
         }
       });
     });
   </script>
+
+  <!-- ─── AUTH MODALS HTML MARKUP ─── -->
+  <div id="auth-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="auth-modal-title">
+    <div class="auth-card">
+      <button class="auth-close" onclick="closeAuthModal()" aria-label="Tutup">&times;</button>
+      <div class="auth-tabs" role="tablist">
+        <button id="tab-login" class="auth-tab active" role="tab" aria-selected="true" onclick="switchAuthTab('login')">Masuk</button>
+        <button id="tab-register" class="auth-tab" role="tab" aria-selected="false" onclick="switchAuthTab('register')">Daftar Baru</button>
+      </div>
+
+      <!-- Login Form -->
+      <form id="form-login" class="auth-form active" onsubmit="submitLogin(event)">
+        <h3 id="auth-modal-title" class="sr-only">Masuk ke Yuphor</h3>
+        <div class="form-field">
+          <label for="login-email">Email</label>
+          <input type="email" id="login-email" required placeholder="nama@email.com">
+        </div>
+        <div class="form-field">
+          <label for="login-password">Password</label>
+          <input type="password" id="login-password" required placeholder="••••••••">
+        </div>
+        <button type="submit" id="btn-login-submit" class="btn-auth-submit">
+          <span>Masuk</span>
+        </button>
+        
+        <div class="auth-divider">atau</div>
+        
+        <button type="button" class="btn-google-login" onclick="handleGoogleLogin()">
+          <svg width="18" height="18" viewBox="0 0 18 18">
+            <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/>
+            <path d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z" fill="#34A853"/>
+            <path d="M3.964 10.707A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.707V4.961H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.039l3.007-2.332z" fill="#FBBC05"/>
+            <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.961L3.964 6.293C4.672 4.166 6.656 3.58 9 3.58z" fill="#EA4335"/>
+          </svg>
+          Lanjut dengan Gmail
+        </button>
+      </form>
+
+      <!-- Register Form -->
+      <form id="form-register" class="auth-form" onsubmit="submitRegister(event)">
+        <div class="form-field">
+          <label for="register-name">Nama Lengkap</label>
+          <input type="text" id="register-name" required placeholder="Budi Santoso">
+        </div>
+        <div class="form-field">
+          <label for="register-email">Email</label>
+          <input type="email" id="register-email" required placeholder="nama@email.com">
+        </div>
+        <div class="form-field">
+          <label for="register-password">Password</label>
+          <input type="password" id="register-password" required placeholder="••••••••">
+        </div>
+        <div class="form-field">
+          <label for="register-confirm">Konfirmasi Password</label>
+          <input type="password" id="register-confirm" required placeholder="••••••••">
+        </div>
+        <button type="submit" id="btn-register-submit" class="btn-auth-submit">
+          <span>Daftar Akun</span>
+        </button>
+        
+        <div class="auth-divider">atau</div>
+        
+        <button type="button" class="btn-google-login" onclick="handleGoogleLogin()">
+          <svg width="18" height="18" viewBox="0 0 18 18">
+            <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/>
+            <path d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z" fill="#34A853"/>
+            <path d="M3.964 10.707A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.707V4.961H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.039l3.007-2.332z" fill="#FBBC05"/>
+            <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.961L3.964 6.293C4.672 4.166 6.656 3.58 9 3.58z" fill="#EA4335"/>
+          </svg>
+          Lanjut dengan Gmail
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ─── SIMULATED GOOGLE LOGIN MODAL ─── -->
+  <div id="google-sim-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="google-sim-title">
+    <div class="google-sim-card">
+      <button class="auth-close" onclick="closeGoogleSim()" aria-label="Tutup" style="color:#5F6368;">&times;</button>
+      
+      <div class="google-sim-logo">
+        <svg width="24" height="24" viewBox="0 0 24 24">
+          <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+          <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+          <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22c-.62-.63-1.07-1.37-1.37-2.17L5.84 14.09z" fill="#FBBC05"/>
+          <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"/>
+        </svg>
+      </div>
+      
+      <h3 class="google-sim-title" id="google-sim-title">Pilih Akun Gmail</h3>
+      <p class="google-sim-subtitle">untuk melanjutkan ke Yuphor</p>
+      
+      <div class="google-sim-list" id="google-sim-list">
+        <!-- Will be populated dynamically by JS -->
+      </div>
+      
+      <div class="google-sim-custom-section">
+        <span class="google-sim-custom-label">Gunakan akun Gmail lain</span>
+        <div class="google-sim-input-row">
+          <input type="email" id="google-sim-email-input" class="google-sim-input" placeholder="nama.anda@gmail.com">
+          <button class="btn-google-sim-submit" onclick="submitGoogleSimCustom()">Lanjut</button>
+        </div>
+      </div>
+    </div>
+  </div>
 </body>
 </html>
