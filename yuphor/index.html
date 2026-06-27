@@ -9,6 +9,41 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap" rel="stylesheet">
   
+  <!-- LocalStorage Spy -->
+  <script>
+    (function() {
+      window.storageLogs = [];
+      const log = (msg) => {
+        const timestamp = new Date().toLocaleTimeString();
+        window.storageLogs.push(`[${timestamp}] ${msg}`);
+        const el = document.getElementById('debug-errors');
+        if (el) {
+          if (el.innerText === 'Errors: None') el.innerText = '';
+          el.innerText += `\n[${timestamp}] ${msg}`;
+        }
+      };
+      
+      const originalSet = localStorage.setItem;
+      const originalRemove = localStorage.removeItem;
+      const originalClear = localStorage.clear;
+
+      localStorage.setItem = function(key, value) {
+        log(`SET: ${key}`);
+        originalSet.apply(this, arguments);
+      };
+
+      localStorage.removeItem = function(key) {
+        log(`REMOVE: ${key}`);
+        originalRemove.apply(this, arguments);
+      };
+
+      localStorage.clear = function() {
+        log(`CLEAR`);
+        originalClear.apply(this, arguments);
+      };
+    })();
+  </script>
+
   <!-- Supabase CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   
@@ -2568,11 +2603,19 @@
       if (isSupabaseActive()) {
         const { data: { session } } = await supabaseClient.auth.getSession();
         if (session && session.user) {
-          const { data: profile } = await supabaseClient
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
+          let profile = null;
+          try {
+            const { data, error } = await supabaseClient
+              .from('profiles')
+              .select('*')
+              .eq('id', session.user.id)
+              .single();
+            if (!error) {
+              profile = data;
+            }
+          } catch (e) {
+            console.warn("Profiles table check failed:", e);
+          }
           
           const userMeta = session.user.user_metadata || {};
           
@@ -2848,7 +2891,7 @@
         const { data, error } = await supabaseClient.auth.signInWithOAuth({
           provider: 'google',
           options: {
-            redirectTo: window.location.href
+            redirectTo: window.location.href.split('#')[0]
           }
         });
         if (error) {
@@ -2912,7 +2955,7 @@
       const inputEl = document.getElementById('google-sim-email-input');
       const email = inputEl.value.trim().toLowerCase();
       if (!email || !email.includes('@')) {
-        alert('Masukkan email Gmail yang valid.');
+        alert('Masukkan email Google yang valid.');
         return;
       }
       
@@ -3312,7 +3355,7 @@
             <path d="M3.964 10.707A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.707V4.961H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.039l3.007-2.332z" fill="#FBBC05"/>
             <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.961L3.964 6.293C4.672 4.166 6.656 3.58 9 3.58z" fill="#EA4335"/>
           </svg>
-          Lanjut dengan Gmail
+          Lanjut dengan Google
         </button>
       </form>
 
@@ -3347,7 +3390,7 @@
             <path d="M3.964 10.707A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.707V4.961H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.039l3.007-2.332z" fill="#FBBC05"/>
             <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.961L3.964 6.293C4.672 4.166 6.656 3.58 9 3.58z" fill="#EA4335"/>
           </svg>
-          Lanjut dengan Gmail
+          Lanjut dengan Google
         </button>
       </form>
     </div>
@@ -3367,7 +3410,7 @@
         </svg>
       </div>
       
-      <h3 class="google-sim-title" id="google-sim-title">Pilih Akun Gmail</h3>
+      <h3 class="google-sim-title" id="google-sim-title">Pilih Akun Google</h3>
       <p class="google-sim-subtitle">untuk melanjutkan ke Yuphor</p>
       
       <div class="google-sim-list" id="google-sim-list">
@@ -3375,7 +3418,7 @@
       </div>
       
       <div class="google-sim-custom-section">
-        <span class="google-sim-custom-label">Gunakan akun Gmail lain</span>
+        <span class="google-sim-custom-label">Gunakan akun Google lain</span>
         <div class="google-sim-input-row">
           <input type="email" id="google-sim-email-input" class="google-sim-input" placeholder="nama.anda@gmail.com">
           <button class="btn-google-sim-submit" onclick="submitGoogleSimCustom()">Lanjut</button>
@@ -3447,5 +3490,67 @@
       </form>
     </div>
   </div>
+
+  <!-- Debug Overlay -->
+  <div id="debug-overlay" style="position: fixed; top: 10px; right: 10px; z-index: 99999; background: rgba(0,0,0,0.85); color: #fff; padding: 10px; font-family: monospace; font-size: 10px; border-radius: 5px; max-width: 300px; display: none; pointer-events: none; max-height: 90vh; overflow-y: auto;">
+    <div><strong>Debug Auth</strong></div>
+    <div id="debug-url">URL: </div>
+    <div id="debug-active">Active: </div>
+    <div id="debug-session">Session: </div>
+    <div id="debug-user">User: </div>
+    <div id="debug-token">Token key: </div>
+    <div id="debug-errors" style="color: #ff5555; margin-top: 5px; border-top: 1px solid #444; padding-top: 5px; white-space: pre-wrap;">Errors: None</div>
+  </div>
+  <script>
+    if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+      // Catch errors
+      window.addEventListener('error', e => {
+        const el = document.getElementById('debug-errors');
+        if (el) el.innerText = (el.innerText === 'Errors: None' ? '' : el.innerText) + '\n[Error] ' + e.message;
+      });
+      window.addEventListener('unhandledrejection', e => {
+        const el = document.getElementById('debug-errors');
+        if (el) el.innerText = (el.innerText === 'Errors: None' ? '' : el.innerText) + '\n[Rejection] ' + e.reason;
+      });
+      const oldConsoleError = console.error;
+      console.error = function(...args) {
+        oldConsoleError.apply(console, args);
+        const el = document.getElementById('debug-errors');
+        if (el) el.innerText = (el.innerText === 'Errors: None' ? '' : el.innerText) + '\n[ConsoleErr] ' + args.map(a => typeof a === 'object' ? JSON.stringify(a) : a).join(' ');
+      };
+
+      const overlay = document.getElementById('debug-overlay');
+      if (overlay) {
+        overlay.style.display = 'block';
+        const errEl = document.getElementById('debug-errors');
+        if (errEl && window.storageLogs && window.storageLogs.length > 0) {
+          errEl.innerText = window.storageLogs.join('\n');
+        }
+        setInterval(async () => {
+          document.getElementById('debug-url').innerText = 'URL: ' + (typeof SUPABASE_URL !== 'undefined' ? SUPABASE_URL : 'N/A');
+          document.getElementById('debug-active').innerText = 'Active: ' + (typeof isSupabaseActive === 'function' ? isSupabaseActive() : 'N/A');
+          document.getElementById('debug-user').innerText = 'User: ' + (typeof currentUser !== 'undefined' ? JSON.stringify(currentUser) : 'N/A');
+          if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+            try {
+              const { data: { session }, error } = await supabaseClient.auth.getSession();
+              if (error) {
+                const el = document.getElementById('debug-errors');
+                if (el) el.innerText = (el.innerText === 'Errors: None' ? '' : el.innerText) + '\n[GetSessionErr] ' + error.message;
+              }
+              document.getElementById('debug-session').innerText = 'Session: ' + (session ? 'Active (' + session.user.email + ')' : 'None');
+            } catch (e) {
+              const el = document.getElementById('debug-errors');
+              if (el) el.innerText = (el.innerText === 'Errors: None' ? '' : el.innerText) + '\n[GetSessionException] ' + e.message;
+            }
+          } else {
+            document.getElementById('debug-session').innerText = 'Session: No Client';
+          }
+          const keys = Object.keys(localStorage);
+          document.getElementById('debug-token').innerText = 'Keys: ' + keys.join(', ');
+        }, 1000);
+      }
+    }
+  </script>
 </body>
 </html>
+

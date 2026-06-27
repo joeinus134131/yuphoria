@@ -3443,15 +3443,24 @@ a:focus-visible, button:focus-visible {
       // Supabase Active Session Listener
       supabaseClient.auth.onAuthStateChange(async (event, session) => {
         if (session && session.user) {
-          const { data: profile } = await supabaseClient
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
-            
+          let profile = null;
+          try {
+            const { data, error } = await supabaseClient
+              .from('profiles')
+              .select('*')
+              .eq('id', session.user.id)
+              .single();
+            if (!error) {
+              profile = data;
+            }
+          } catch (e) {
+            console.warn("Profiles table check failed:", e);
+          }
+          
+          const userMeta = session.user.user_metadata || {};
           currentUser = {
             id: session.user.id,
-            name: profile ? profile.name : (session.user.user_metadata.name || 'User'),
+            name: profile ? profile.name : (userMeta.full_name || userMeta.name || 'User'),
             email: session.user.email,
             defaultLabel: profile ? profile.default_label : 'yuphoria'
           };
@@ -3479,5 +3488,36 @@ a:focus-visible, button:focus-visible {
   });
 </script>
 
+  <!-- Debug Overlay -->
+  <div id="debug-overlay" style="position: fixed; top: 10px; right: 10px; z-index: 99999; background: rgba(0,0,0,0.85); color: #fff; padding: 10px; font-family: monospace; font-size: 10px; border-radius: 5px; max-width: 300px; display: none; pointer-events: none;">
+    <div><strong>Debug Auth</strong></div>
+    <div id="debug-url">URL: </div>
+    <div id="debug-active">Active: </div>
+    <div id="debug-session">Session: </div>
+    <div id="debug-user">User: </div>
+    <div id="debug-token">Token key: </div>
+  </div>
+  <script>
+    if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+      const overlay = document.getElementById('debug-overlay');
+      if (overlay) {
+        overlay.style.display = 'block';
+        setInterval(async () => {
+          document.getElementById('debug-url').innerText = 'URL: ' + (typeof SUPABASE_URL !== 'undefined' ? SUPABASE_URL : 'N/A');
+          document.getElementById('debug-active').innerText = 'Active: ' + (typeof isSupabaseActive === 'function' ? isSupabaseActive() : 'N/A');
+          document.getElementById('debug-user').innerText = 'User: ' + (typeof currentUser !== 'undefined' ? JSON.stringify(currentUser) : 'N/A');
+          if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            document.getElementById('debug-session').innerText = 'Session: ' + (session ? 'Active (' + session.user.email + ')' : 'None');
+          } else {
+            document.getElementById('debug-session').innerText = 'Session: No Client';
+          }
+          const keys = Object.keys(localStorage).filter(k => k.includes('auth-token') || k.includes('session'));
+          document.getElementById('debug-token').innerText = 'Keys: ' + keys.join(', ');
+        }, 1000);
+      }
+    }
+  </script>
 </body>
 </html>
+
